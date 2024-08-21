@@ -1,8 +1,12 @@
+import 'package:appnongsan/reponsive/mobile_screen_layout.dart';
+import 'package:appnongsan/reponsive/reponsive_screen_layout.dart';
+import 'package:appnongsan/screens/home_screen.dart';
+import 'package:appnongsan/screens/login_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
-  runApp(const MainApp());
+  runApp(MainApp());
   try{
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp();
@@ -15,15 +19,8 @@ void main() async {
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
-
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
-    );
+    return MaterialApp(home: LoginScreen());
   }
 }
