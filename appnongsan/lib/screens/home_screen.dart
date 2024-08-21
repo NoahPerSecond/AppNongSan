@@ -5,13 +5,6 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      
-      body: Column(
-        children: [
-          Image.asset('assets/logo_logo.jpg')
-        ],
-      ),
-    );
+    return Text('Home Screen');
   }
 }
