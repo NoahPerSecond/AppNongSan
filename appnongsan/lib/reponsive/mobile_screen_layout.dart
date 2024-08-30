@@ -48,9 +48,10 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
         children: homeScreenItems,
       ),
       bottomNavigationBar: CupertinoTabBar(
+        backgroundColor: Colors.green,
         onTap: navigationTapped,
         items: [
-          BottomNavigationBarItem(
+          BottomNavigationBarItem(    
               icon: Icon(Icons.home,
                   color: page == 0 ? primaryColor : secondaryColor),
               label: 'Trang chủ'),

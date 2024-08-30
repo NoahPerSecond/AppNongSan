@@ -1,7 +1,6 @@
-import 'package:appnongsan/reponsive/mobile_screen_layout.dart';
-import 'package:appnongsan/reponsive/reponsive_screen_layout.dart';
-import 'package:appnongsan/screens/home_screen.dart';
+
 import 'package:appnongsan/screens/login_screen.dart';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
@@ -10,6 +9,7 @@ void main() async {
   try{
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp();
+    
     print('Ket noi firebase thanh cong');
   }catch(e)
   {

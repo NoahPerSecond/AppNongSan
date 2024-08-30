@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 
 class LoginButton extends StatelessWidget {
-  const LoginButton({super.key});
+  final String text;
+  final bool isLoading;
+  final Function onPressed;
+  LoginButton({super.key, required this.text, required this.isLoading, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 350,
       height: 54,
-     
       child: OutlinedButton(
-        onPressed: () {}, 
+        onPressed: () => onPressed, 
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.green,
         ),
-        child: Text('Đăng nhập',style: TextStyle(color: Colors.white),)),
+        child:(isLoading) ? CircularProgressIndicator() : Text(text,style: TextStyle(color: Colors.white),)),
     );
   }
 }
