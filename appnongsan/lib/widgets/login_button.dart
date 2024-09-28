@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class LoginButton extends StatelessWidget {
   final String text;
   final bool isLoading;
-  final Function onPressed;
+  void Function() onPressed;
   LoginButton({super.key, required this.text, required this.isLoading, required this.onPressed});
 
   @override
@@ -12,7 +12,7 @@ class LoginButton extends StatelessWidget {
       width: 350,
       height: 54,
       child: OutlinedButton(
-        onPressed: () => onPressed, 
+        onPressed: onPressed, 
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.green,
         ),

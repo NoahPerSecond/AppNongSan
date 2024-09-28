@@ -3,15 +3,17 @@ import 'package:appnongsan/reponsive/reponsive_screen_layout.dart';
 import 'package:appnongsan/reponsive/web_screen_layout.dart';
 import 'package:appnongsan/resources/auth_methods.dart';
 import 'package:appnongsan/screens/forget_password_screen.dart';
+import 'package:appnongsan/screens/home_screen.dart';
 import 'package:appnongsan/screens/sign_up_screen.dart';
 import 'package:appnongsan/utils/utils.dart';
 import 'package:appnongsan/widgets/login_button.dart';
 import 'package:appnongsan/widgets/login_textfield.dart';
 import 'package:appnongsan/widgets/password_field.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -76,10 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: InkWell(
                 onTap: () => Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
-                        builder: (context) => ForgetPasswordScreen()
-                        )
-                        )
-                        ,
+                        builder: (context) => ForgetPasswordScreen())),
                 child: Text('Quên mật khẩu ?'),
               ),
             ),
@@ -110,24 +109,66 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(
               height: 24,
             ),
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Column(children: [
-                  CircleAvatar(
-                    backgroundImage: AssetImage('assets/fb_logo.jpg'),
-                  ),
-                  Text('Facebook')
-                ]),
+                InkWell(
+                  onTap: () async {
+                    User? user = await AuthMethods().signInWithFacebook();
+                    if (user != null) {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => const ReponsiveLayout(
+                            mobileScreenLayout: MobileScreenLayout(),
+                            webScreenLayout: WebScreenLayout(),
+                          ),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text('Đăng nhập bằng Facebook thất bại')),
+                      );
+                    }
+                  },
+                  child: Column(children: [
+                    CircleAvatar(
+                      backgroundImage: AssetImage('assets/fb_logo.jpg'),
+                    ),
+                    Text('Facebook')
+                  ]),
+                ),
                 SizedBox(
                   width: 50,
                 ),
-                Column(children: [
-                  CircleAvatar(
-                    backgroundImage: AssetImage('assets/gg_logo.webp'),
-                  ),
-                  Text('Google')
-                ])
+                InkWell(
+                  onTap: () async {
+                    User? user = await AuthMethods().signInWithGoogle();
+                    if (user != null) {
+                      // Người dùng đăng nhập thành công, điều hướng đến trang chính
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => const ReponsiveLayout(
+                            mobileScreenLayout: MobileScreenLayout(),
+                            webScreenLayout: WebScreenLayout(),
+                          ),
+                        ),
+                      );
+                    } else {
+                      // Xử lý khi đăng nhập thất bại
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text('Đăng nhập bằng Google thất bại')),
+                      );
+                    }
+                  },
+                  child: Column(children: [
+                    CircleAvatar(
+                      backgroundImage: AssetImage('assets/gg_logo.webp'),
+                    ),
+                    Text('Google')
+                  ]),
+                )
               ],
             ),
             SizedBox(

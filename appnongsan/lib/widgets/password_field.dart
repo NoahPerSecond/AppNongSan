@@ -24,12 +24,7 @@ class _LoginTextfieldState extends State<PasswordTextfield> {
       width: 350,
       height: 54,
       child: TextFormField(
-        validator: (value) {
-          if(value != widget.prePass)
-          {
-            
-          }
-        },
+        
         obscureText: obscureText,
         controller: widget.editingController,
         decoration: InputDecoration(

@@ -17,6 +17,8 @@ dependencies:
   google_sign_in: ^6.2.1
   firebase_app_check: ^0.3.0+4
   carousel_slider: ^5.0.0
+  flutter_facebook_auth: ^7.1.0
+  shared_preferences: ^2.3.2
 
 dev_dependencies:
   flutter_test:
@@ -32,3 +34,6 @@ flutter:
    - assets/slider1.png
    - assets/slider2.jpg
    - assets/slider3.jpg
+   - assets/apple.png
+   - assets/broccoli.png
+   - assets/wheat.png

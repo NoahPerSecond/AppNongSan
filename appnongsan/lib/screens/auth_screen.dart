@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:appnongsan/resources/auth_methods.dart';
 import 'package:appnongsan/screens/home_screen.dart';
+import 'package:appnongsan/screens/login_screen.dart';
 import 'package:appnongsan/screens/sign_up_screen.dart';
 import 'package:appnongsan/utils/utils.dart';
+import 'package:appnongsan/widgets/login_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +20,33 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
+  void signUpUser() async {
+    // setState(() {
+    //   isLoading = true;
+    // });
+    String res = await AuthMethods().signUpUser(
+      email: widget.gmail,
+      password: widget.password,
+    );
+    print(res);
+    if (res == 'success') {
+      // await AuthMethods().sendVerificationEmail();
+      if (context.mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+              builder: (context) => AuthScreen(
+                    gmail: widget.gmail,
+                    password: widget.password,
+                  )),
+        );
+      }
+    } else {
+      showSnackBar(res, context);
+    }
+    // setState(() {
+    //   isLoading = false;
+    // });
+  }
   // void checkEmailVerification() async {
   //   String res ='';
   //   res = 
@@ -98,6 +127,25 @@ void _startEmailVerificationCheck() {
             Text('Một email xác nhận đã được gửi đến', style: TextStyle(fontSize: 17),),
             SizedBox(height: 10,),
             Text(widget.gmail, style: TextStyle(fontSize: 17, color: Colors.green),),
+            SizedBox(height: 10,),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Không nhận được email? '),
+                InkWell(
+                  onTap: () => signUpUser,
+                  child: Text('Gửi lại email.', style: TextStyle(color: Colors.green),),
+                )
+              ],
+            ),
+            SizedBox(height: 10,),
+            LoginButton(
+                text: 'Quay về trang đăng nhập',
+                isLoading: false,
+                onPressed: ()  {
+                   Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => LoginScreen()));
+                })
           ],
         ),
       ),

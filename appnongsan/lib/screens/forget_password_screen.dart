@@ -1,3 +1,5 @@
+import 'package:appnongsan/resources/auth_methods.dart';
+import 'package:appnongsan/screens/forget_password_confirm_screen.dart';
 import 'package:appnongsan/screens/login_screen.dart';
 import 'package:appnongsan/widgets/login_button.dart';
 import 'package:appnongsan/widgets/login_textfield.dart';
@@ -22,12 +24,8 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
           style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(
-          onPressed: () =>Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                        builder: (context) => LoginScreen()
-                        )
-                        )
-                        ,
+          onPressed: () => Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => LoginScreen())),
           icon: Icon(Icons.arrow_back),
           color: Colors.white,
         ),
@@ -36,7 +34,6 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
-          
           children: [
             SizedBox(
               height: 16,
@@ -59,7 +56,15 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
             SizedBox(
               height: 16,
             ),
-            LoginButton(text: 'Tiếp theo', isLoading: false, onPressed: () {})
+            LoginButton(
+                text: 'Tiếp theo',
+                isLoading: false,
+                onPressed: () async {
+                  await AuthMethods().resetPassword(accController.text);
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(
+                      builder: (context) => ForgetPasswordConfirmScreen(
+                          gmail: accController.text)));
+                })
           ],
         ),
       ),

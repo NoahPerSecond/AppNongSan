@@ -30,7 +30,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (res == 'success') {
       Navigator.of(context).pushReplacement(MaterialPageRoute(
           builder: (context) => AuthScreen(
-                gmail: emailController.text,password: passController.text,
+                gmail: emailController.text,
+                password: passController.text,
               )));
     }
   }
@@ -49,7 +50,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (context.mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-              builder: (context) => AuthScreen(gmail: emailController.text, password: passController.text,)),
+              builder: (context) => AuthScreen(
+                    gmail: emailController.text,
+                    password: passController.text,
+                  )),
         );
       }
     } else {
@@ -69,6 +73,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     rePassController.dispose();
   }
 
+  final _formKey = GlobalKey<FormState>();
+
+  bool obscureTextPass = true;
+  bool obscureTextRePass = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,37 +95,114 @@ class _SignUpScreenState extends State<SignUpScreen> {
             const SizedBox(
               height: 24,
             ),
-            PasswordTextfield(
-              hintText: 'Mật khẩu',
-              editingController: passController,
-            ),
-            const SizedBox(
+            // PasswordTextfield(
+            //   hintText: 'Mật khẩu',
+            //   editingController: passController,
+            // ),
+            // const SizedBox(
+            //   height: 24,
+            // ),
+            // PasswordTextfield(
+            //   hintText: 'Nhập lại mật khẩu',
+            //   editingController: rePassController,
+            // ),
+            Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    Container(
+                      width: 350,
+                      height: 54,
+                      child: TextFormField(
+                        obscureText: obscureTextPass,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a password';
+                          }
+                          return null;
+                        },
+                        controller: passController,
+                        decoration: InputDecoration(
+                            suffixIcon: IconButton(
+                              icon: Icon(obscureTextPass
+                                  ? Icons.visibility_off
+                                  : Icons.visibility),
+                              onPressed: () {
+                                setState(() {
+                                  obscureTextPass = !obscureTextPass;
+                                });
+                              },
+                            ),
+                            hintText: 'Mật khẩu',
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(25))),
+                      ),
+                    ),
+                    const SizedBox(
               height: 24,
             ),
-            PasswordTextfield(
-              hintText: 'Nhập lại mật khẩu',
-              editingController: rePassController,
-            ),
-            const SizedBox(
-              height: 24,
-            ),
-            Container(
-              width: 350,
-              height: 54,
-              child: TextButton(
-                onPressed:signUpUser,
-                child: Text(
-                  'Đăng ký tài khoản',
-                  style: TextStyle(color: Colors.white),
-                ),
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.green, // Màu nền của nút
+                    Container(
+                      width: 350,
+                      height: 54,
+                      child: TextFormField(
+                        obscureText: obscureTextRePass,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please confirm your password';
+                          }
+                          if (value != passController.text) {
+                            return 'Passwords do not match';
+                          }
+                        },
+                        controller: rePassController,
+                        decoration: InputDecoration(
+                            suffixIcon: IconButton(
+                              icon: Icon(obscureTextRePass
+                                  ? Icons.visibility_off
+                                  : Icons.visibility),
+                              onPressed: () {
+                                setState(() {
+                                  obscureTextRePass = !obscureTextRePass;
+                                });
+                              },
+                            ),
+                            hintText: 'Mật khẩu',
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(25))),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 24,
+                    ),
+                    Container(
+                      width: 350,
+                      height: 54,
+                      child: TextButton(
+                        onPressed: () {
+                          if (_formKey.currentState?.validate() == true) {
+                            signUpUser();
+                            // Proceed with registration logic
+                            // ScaffoldMessenger.of(context).showSnackBar(
+                            //   SnackBar(content: Text('Passwords match!')),
+                            // );
+                          }
+                        },
+                        child: Text(
+                          'Đăng ký tài khoản',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.green, // Màu nền của nút
 
-                  padding: EdgeInsets.symmetric(
-                      vertical: 12.0, horizontal: 24.0), // Padding của nút
-                ),
-              ),
-            ),
+                          padding: EdgeInsets.symmetric(
+                              vertical: 12.0,
+                              horizontal: 24.0), // Padding của nút
+                        ),
+                      ),
+                    ),
+                  ],
+                )),
+
             SizedBox(
               height: 100,
             ),

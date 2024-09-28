@@ -9,8 +9,14 @@ class ProductModel {
   final String origin;
   final int stockQuantity;
   final String uid;
+  final String price;
+  final String newPrice;
+  final int rating;
 
   ProductModel({
+    required this.price,
+    required this.newPrice,
+    required this.rating,
     required this.category,
     required this.description,
     required this.imageUrl,
@@ -23,23 +29,25 @@ class ProductModel {
   Map<String, dynamic> toJson() => {
         "uid": uid,
         "category": category,
-        "description":description,
-        "imageUrl":imageUrl,
-        "name":name,
-        "origin":origin,
-        "stockQuantity":stockQuantity,
+        "description": description,
+        "imageUrl": imageUrl,
+        "name": name,
+        "origin": origin,
+        "stockQuantity": stockQuantity,
       };
 
   static ProductModel fromSnap(DocumentSnapshot snap) {
     var snapshot = snap.data() as Map<String, dynamic>;
     return ProductModel(
-      uid: snapshot['uid'],
-      category: snapshot['category'],
-      description: snapshot['description'],
-      imageUrl: snapshot['imageUrl'],
-      name: snapshot['name'],
-      origin: snapshot['origin'],
-      stockQuantity: snapshot['stockQuantity']
-    );
+        uid: snapshot['uid'],
+        category: snapshot['category'],
+        description: snapshot['description'],
+        imageUrl: snapshot['imageUrl'],
+        name: snapshot['name'],
+        origin: snapshot['origin'],
+        stockQuantity: snapshot['stockQuantity'],
+        price: snapshot['price'],
+        newPrice: snapshot['newPrice'],
+        rating: snapshot['rating']);
   }
 }
