@@ -22,7 +22,34 @@ class _ProductCardState extends State<ProductCard> {
     checkIfFavorite();
   }
 
-   Future<void> checkIfFavorite() async {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    checkIfFavorite(); // Kiểm tra lại trạng thái yêu thích khi widget thay đổi
+  }
+
+  Future<void> removeFromFavourites() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user!.uid)
+          .collection('favourites')
+          .doc(widget.productId)
+          .delete();
+
+      // Cập nhật trạng thái UI sau khi xóa khỏi mục yêu thích
+      setState(() {
+        _isFavorite = false;
+      });
+
+      print('Product removed from favourites');
+    } catch (e) {
+      print('Failed to remove from favourites: $e');
+    }
+  }
+
+  Future<void> checkIfFavorite() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       DocumentSnapshot doc = await FirebaseFirestore.instance
@@ -34,7 +61,11 @@ class _ProductCardState extends State<ProductCard> {
 
       if (doc.exists) {
         setState(() {
-          _isFavorite = true; // Product is already a favorite
+          _isFavorite = true;
+        });
+      } else {
+        setState(() {
+          _isFavorite = false; // Nếu không tồn tại, đảm bảo trạng thái được cập nhật
         });
       }
     }
@@ -43,13 +74,13 @@ class _ProductCardState extends State<ProductCard> {
   Future<void> addToFavourites() async {
     User? user = FirebaseAuth.instance.currentUser;
     final String category = widget.snap["category"];
-    final String description= widget.snap["description"];
-    final String imageUrl= widget.snap["imageUrl"];
-    final String name= widget.snap["name"];
-    final String origin= widget.snap["origin"];
-    final int stockQuantity= widget.snap["stockQuantity"];
-    final String price= widget.snap["price"];
-    final String newPrice= widget.snap["newPrice"];
+    final String description = widget.snap["description"];
+    final String imageUrl = widget.snap["imageUrl"];
+    final String name = widget.snap["name"];
+    final String origin = widget.snap["origin"];
+    final int stockQuantity = widget.snap["stockQuantity"];
+    final String price = widget.snap["price"];
+    final String newPrice = widget.snap["newPrice"];
     final bool isSale = widget.snap["isSale"];
     final int rating = widget.snap["rating"];
     try {
@@ -59,7 +90,6 @@ class _ProductCardState extends State<ProductCard> {
           .collection('favourites')
           .doc(widget.productId)
           .set({
-            
         'productId': widget.productId,
         "category": category,
         "description": description,
@@ -67,13 +97,16 @@ class _ProductCardState extends State<ProductCard> {
         "name": name,
         "origin": origin,
         "stockQuantity": stockQuantity,
-        "price" : price,
-        "newPrice" : newPrice,
-        "isSale" : isSale,
-        "rating" : rating,
-        "quantity" : 1,
+        "price": price,
+        "newPrice": newPrice,
+        "isSale": isSale,
+        "rating": rating,
+        "quantity": 1,
       });
       print('Product added to favourites');
+      setState(() {
+        _isFavorite = true;
+      });
     } catch (e) {
       print('Failed to add to favourites: $e');
     }
@@ -171,15 +204,21 @@ class _ProductCardState extends State<ProductCard> {
               backgroundColor: Colors.white,
               child: IconButton(
                   onPressed: () {
-                    addToFavourites();
+                    if (_isFavorite) {
+    removeFromFavourites();  // Xóa khỏi yêu thích
+  } else {
+    addToFavourites();  // Thêm vào yêu thích
+  }
                   },
                   icon: Icon(
-                        _isFavorite
-                            ? Icons.favorite // Red icon if favorite
-                            : Icons.favorite_outline, // Outline if not favorite
-                        size: 20,
-                        color: _isFavorite ? Colors.red : Colors.black, // Change color based on state
-                      )),
+                    _isFavorite
+                        ? Icons.favorite // Red icon if favorite
+                        : Icons.favorite_outline, // Outline if not favorite
+                    size: 20,
+                    color: _isFavorite
+                        ? Colors.red
+                        : Colors.black, // Change color based on state
+                  )),
             )),
         Positioned(
             top: 80,

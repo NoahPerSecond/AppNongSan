@@ -13,25 +13,45 @@ class HorizontalProductCard extends StatefulWidget {
 }
 
 class _HorizontalProductCardState extends State<HorizontalProductCard> {
-  bool _isFavorite = false;
+  bool _isFavorite = true;
   int _quantity = 1;
   Future<void> _updateQuantity(int change) async {
-  setState(() {
-    _quantity = (_quantity + change)
-        .clamp(1, 100); // Cập nhật giá trị _quantity trước khi lưu vào Firestore
-  });
+    setState(() {
+      _quantity = (_quantity + change).clamp(
+          1, 100); // Cập nhật giá trị _quantity trước khi lưu vào Firestore
+    });
 
-  User? user = FirebaseAuth.instance.currentUser;
-  await FirebaseFirestore.instance
-      .collection('users')
-      .doc(user!.uid)
-      .collection('favourites')
-      .doc(widget.productId)
-      .update({
-        "quantity": _quantity, // Lưu giá trị đã cập nhật vào Firestore
+    User? user = FirebaseAuth.instance.currentUser;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .collection('favourites')
+        .doc(widget.productId)
+        .update({
+      "quantity": _quantity, // Lưu giá trị đã cập nhật vào Firestore
+    });
+  }
+
+  Future<void> removeFromFavourites() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user!.uid)
+          .collection('favourites')
+          .doc(widget.productId)
+          .delete();
+
+      // Cập nhật trạng thái UI sau khi xóa khỏi mục yêu thích
+      setState(() {
+        _isFavorite = false;
       });
-}
 
+      print('Product removed from favourites');
+    } catch (e) {
+      print('Failed to remove from favourites: $e');
+    }
+  }
 
   Future<void> checkIfFavorite() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -45,64 +65,68 @@ class _HorizontalProductCardState extends State<HorizontalProductCard> {
 
       if (doc.exists) {
         setState(() {
-          _isFavorite = true; // Product is already a favorite
+          _isFavorite = true;
+        });
+      } else {
+        setState(() {
+          _isFavorite = false; // Nếu không tồn tại, đảm bảo trạng thái được cập nhật
         });
       }
     }
   }
 
-  Future<void> toggleFavorite() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+  // Future<void> toggleFavorite() async {
+  //   User? user = FirebaseAuth.instance.currentUser;
+  //   if (user == null) return;
 
-    if (_isFavorite) {
-      // Remove from favorites
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('favourites')
-          .doc(widget.productId)
-          .delete();
-      setState(() {
-        _isFavorite = false; // Update the UI
-      });
-    } else {
-      // Add to favorites
-      final String category = widget.snap["category"];
-      final String description = widget.snap["description"];
-      final String imageUrl = widget.snap["imageUrl"];
-      final String name = widget.snap["name"];
-      final String origin = widget.snap["origin"];
-      final int stockQuantity = widget.snap["stockQuantity"];
-      final String price = widget.snap["price"];
-      final String newPrice = widget.snap["newPrice"];
-      final bool isSale = widget.snap["isSale"];
-      final int rating = widget.snap["rating"];
+  //   if (_isFavorite) {
+  //     // Remove from favorites
+  //     await FirebaseFirestore.instance
+  //         .collection('users')
+  //         .doc(user.uid)
+  //         .collection('favourites')
+  //         .doc(widget.productId)
+  //         .delete();
+  //     setState(() {
+  //       _isFavorite = false; // Update the UI
+  //     });
+  //   } else {
+  //     // Add to favorites
+  //     final String category = widget.snap["category"];
+  //     final String description = widget.snap["description"];
+  //     final String imageUrl = widget.snap["imageUrl"];
+  //     final String name = widget.snap["name"];
+  //     final String origin = widget.snap["origin"];
+  //     final int stockQuantity = widget.snap["stockQuantity"];
+  //     final String price = widget.snap["price"];
+  //     final String newPrice = widget.snap["newPrice"];
+  //     final bool isSale = widget.snap["isSale"];
+  //     final int rating = widget.snap["rating"];
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('favourites')
-          .doc(widget.productId)
-          .set({
-        'productId': widget.productId,
-        "category": category,
-        "description": description,
-        "imageUrl": imageUrl,
-        "name": name,
-        "origin": origin,
-        "stockQuantity": stockQuantity,
-        "price": price,
-        "newPrice": newPrice,
-        "isSale": isSale,
-        "rating": rating,
-        "quantity": _quantity,
-      });
-      setState(() {
-        _isFavorite = true; // Update the UI
-      });
-    }
-  }
+  //     await FirebaseFirestore.instance
+  //         .collection('users')
+  //         .doc(user.uid)
+  //         .collection('favourites')
+  //         .doc(widget.productId)
+  //         .set({
+  //       'productId': widget.productId,
+  //       "category": category,
+  //       "description": description,
+  //       "imageUrl": imageUrl,
+  //       "name": name,
+  //       "origin": origin,
+  //       "stockQuantity": stockQuantity,
+  //       "price": price,
+  //       "newPrice": newPrice,
+  //       "isSale": isSale,
+  //       "rating": rating,
+  //       "quantity": _quantity,
+  //     });
+  //     setState(() {
+  //       _isFavorite = true; // Update the UI
+  //     });
+  //   }
+  // }
 
   @override
   void initState() {
@@ -215,7 +239,9 @@ class _HorizontalProductCardState extends State<HorizontalProductCard> {
             backgroundColor: Colors.white,
             child: IconButton(
               onPressed: () {
-                toggleFavorite();
+                if (_isFavorite) {
+                  removeFromFavourites(); // Xóa khỏi yêu thích
+                } 
               },
               icon: Icon(
                 _isFavorite

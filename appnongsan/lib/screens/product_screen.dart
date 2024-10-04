@@ -31,7 +31,8 @@ class ProductScreen extends StatelessWidget {
         child: Container(
           height: 230,
           child: StreamBuilder(
-              stream: FirebaseFirestore.instance.collection('product').snapshots(),
+              stream:
+                  FirebaseFirestore.instance.collection('product').snapshots(),
               builder: (context,
                   AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -42,8 +43,10 @@ class ProductScreen extends StatelessWidget {
                 return ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: snapshot.data!.docs.length,
-                    itemBuilder: (context, index) =>
-                        ProductCard(snap: snapshot.data!.docs[index].data(), productId: snapshot.data!.docs[index].id,));
+                    itemBuilder: (context, index) => ProductCard(
+                          snap: snapshot.data!.docs[index].data(),
+                          productId: snapshot.data!.docs[index].id,
+                        ));
               }),
         ),
       ),

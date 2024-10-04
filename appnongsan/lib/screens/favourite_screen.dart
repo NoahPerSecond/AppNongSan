@@ -11,30 +11,31 @@ class FavouriteScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     User? user = FirebaseAuth.instance.currentUser;
     return Scaffold(
-      appBar: AppBar(title: Text('Danh sách yêu thích'),),
+      appBar: AppBar(
+        title: Text('Danh sách yêu thích'),
+      ),
       body: Container(
-                  
-                  
-                  child: StreamBuilder(
-                      stream: FirebaseFirestore.instance
-                          .collection('users').doc(user!.uid).collection('favourites')
-                          .snapshots(),
-                      builder: (context,
-                          AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
-                              snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-                        return ListView.builder(
-                          shrinkWrap: true,
-                            scrollDirection: Axis.vertical,
-                            itemCount: snapshot.data!.docs.length,
-                            itemBuilder: (context, index) => HorizontalProductCard(
-                                snap: snapshot.data!.docs[index].data()));
-                      }),
-                ),
+        child: StreamBuilder(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .doc(user!.uid)
+                .collection('favourites')
+                .snapshots(),
+            builder: (context,
+                AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+              return ListView.builder(
+                  shrinkWrap: true,
+                  scrollDirection: Axis.vertical,
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) => HorizontalProductCard(
+                      snap: snapshot.data!.docs[index].data(), productId: snapshot.data!.docs[index].id,));
+            }),
+      ),
     );
   }
 }

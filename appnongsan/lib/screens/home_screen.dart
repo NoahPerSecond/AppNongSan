@@ -15,7 +15,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
-    
     List<String> _searchHistory = [];
     final List<String> imgSliderList = [
       'assets/slider1.png',
@@ -24,28 +23,28 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     // Lấy lịch sử tìm kiếm từ SharedPreferences
-  _loadSearchHistory() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _searchHistory = prefs.getStringList('searchHistory') ?? [];
-    });
-  }
-
-  // Lưu lịch sử tìm kiếm vào SharedPreferences
-  _saveSearchHistory(String query) async {
-    if (query.isNotEmpty) {
+    _loadSearchHistory() async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       setState(() {
-        _searchHistory.add(query);
-        prefs.setStringList('searchHistory', _searchHistory);
+        _searchHistory = prefs.getStringList('searchHistory') ?? [];
       });
     }
-  }
 
-    final GlobalKey<ScaffoldState> scaffoldKey = GlobalKeyManager().getScaffoldKey;
-    
+    // Lưu lịch sử tìm kiếm vào SharedPreferences
+    _saveSearchHistory(String query) async {
+      if (query.isNotEmpty) {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        setState(() {
+          _searchHistory.add(query);
+          prefs.setStringList('searchHistory', _searchHistory);
+        });
+      }
+    }
+
+    final GlobalKey<ScaffoldState> scaffoldKey =
+        GlobalKeyManager().getScaffoldKey;
+
     return Scaffold(
-      
       appBar: AppBar(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
@@ -53,11 +52,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         leading: IconButton(
-          onPressed: () =>  scaffoldKey.currentState!.openDrawer(),
-          icon:Icon(Icons.menu,
-          color: Colors.white,
-          size: 40,)
-        ),
+            onPressed: () => scaffoldKey.currentState!.openDrawer(),
+            icon: Icon(
+              Icons.menu,
+              color: Colors.white,
+              size: 40,
+            )),
         title: Text(
           'LOGO',
           style: TextStyle(
@@ -93,7 +93,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -138,11 +137,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           radius: 30,
                           backgroundColor: Colors.green,
                           child: InkWell(
-                            onTap: () {
-                              
-                            },
-                            child: Image.asset('assets/apple.png',color: Colors.white,width: 40, height: 40,))
-                            ),
+                              onTap: () {},
+                              child: Image.asset(
+                                'assets/apple.png',
+                                color: Colors.white,
+                                width: 40,
+                                height: 40,
+                              ))),
                       Text('Trái cây'),
                     ],
                   ),
@@ -155,10 +156,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           radius: 30,
                           backgroundColor: Colors.green,
                           child: InkWell(
-                            onTap: () {
-                              
-                            },
-                            child: Image.asset('assets/broccoli.png',color: Colors.white,width: 40, height: 40,))),
+                              onTap: () {},
+                              child: Image.asset(
+                                'assets/broccoli.png',
+                                color: Colors.white,
+                                width: 40,
+                                height: 40,
+                              ))),
                       Text('Rau củ'),
                       SizedBox(
                         width: 16,
@@ -174,10 +178,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           radius: 30,
                           backgroundColor: Colors.green,
                           child: InkWell(
-                            onTap: () {
-                              
-                            },
-                            child: Image.asset('assets/wheat.png',color: Colors.white,width: 40, height: 40,))),
+                              onTap: () {},
+                              child: Image.asset(
+                                'assets/wheat.png',
+                                color: Colors.white,
+                                width: 40,
+                                height: 40,
+                              ))),
                       Text('Gạo'),
                       SizedBox(
                         width: 16,
@@ -195,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
               thickness: 0.2, // Độ dày của đường kẻ
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16,vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -205,11 +212,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8,vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               child: SingleChildScrollView(
                 child: Container(
                   height: 230,
-                  
                   child: StreamBuilder(
                       stream: FirebaseFirestore.instance
                           .collection('product')
@@ -217,7 +223,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (context,
                           AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
                               snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return const Center(
                             child: CircularProgressIndicator(),
                           );
@@ -226,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             scrollDirection: Axis.horizontal,
                             itemCount: snapshot.data!.docs.length,
                             itemBuilder: (context, index) => ProductCard(
-                                snap: snapshot.data!.docs[index].data()));
+                                snap: snapshot.data!.docs[index].data(),productId: snapshot.data!.docs[index].id));
                       }),
                 ),
               ),
@@ -236,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
               thickness: 0.2, // Độ dày của đường kẻ
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16,vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -246,11 +253,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8,vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               child: SingleChildScrollView(
                 child: Container(
                   height: 230,
-                  
                   child: StreamBuilder(
                       stream: FirebaseFirestore.instance
                           .collection('product')
@@ -258,7 +264,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (context,
                           AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
                               snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return const Center(
                             child: CircularProgressIndicator(),
                           );
@@ -267,7 +274,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             scrollDirection: Axis.horizontal,
                             itemCount: snapshot.data!.docs.length,
                             itemBuilder: (context, index) => ProductCard(
-                                snap: snapshot.data!.docs[index].data()));
+                                  snap: snapshot.data!.docs[index].data(),
+                                  productId: snapshot.data!.docs[index].id,
+                                ));
                       }),
                 ),
               ),
