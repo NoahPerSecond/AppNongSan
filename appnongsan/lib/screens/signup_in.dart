@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:appnongsan/screens/demoscreen.dart';
 import 'account.dart';
 import 'policy.dart';
 
@@ -127,42 +126,6 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.green,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white.withOpacity(0.6),
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-
-          if (index == 0) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => MainForm()),
-            );
-          }
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home, size: 20),
-            label: 'Trang chủ',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_bag, size: 20),
-            label: 'Sản phẩm',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite, size: 20),
-            label: 'Yêu thích',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle, size: 20),
-            label: 'Tài khoản',
-          ),
-        ],
       ),
     );
   }
