@@ -13,7 +13,8 @@ import 'package:flutter/material.dart';
 class AuthScreen extends StatefulWidget {
   String gmail;
   String password;
-  AuthScreen({super.key, required this.gmail, required this.password});
+  String uid;
+  AuthScreen({super.key, required this.gmail, required this.password, required this.uid});
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -27,6 +28,7 @@ class _AuthScreenState extends State<AuthScreen> {
     String res = await AuthMethods().signUpUser(
       email: widget.gmail,
       password: widget.password,
+      uid: widget.uid
     );
     print(res);
     if (res == 'success') {
@@ -37,6 +39,7 @@ class _AuthScreenState extends State<AuthScreen> {
               builder: (context) => AuthScreen(
                     gmail: widget.gmail,
                     password: widget.password,
+                    uid: widget.uid,
                   )),
         );
       }

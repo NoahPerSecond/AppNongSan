@@ -112,35 +112,35 @@ class _LoginScreenState extends State<LoginScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                InkWell(
-                  onTap: () async {
-                    User? user = await AuthMethods().signInWithFacebook();
-                    if (user != null) {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => const ReponsiveLayout(
-                            mobileScreenLayout: MobileScreenLayout(),
-                            webScreenLayout: WebScreenLayout(),
-                          ),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text('Đăng nhập bằng Facebook thất bại')),
-                      );
-                    }
-                  },
-                  child: Column(children: [
-                    CircleAvatar(
-                      backgroundImage: AssetImage('assets/fb_logo.jpg'),
-                    ),
-                    Text('Facebook')
-                  ]),
-                ),
-                SizedBox(
-                  width: 50,
-                ),
+                // InkWell(
+                //   onTap: () async {
+                //     User? user = await AuthMethods().signInWithFacebook();
+                //     if (user != null) {
+                //       Navigator.of(context).pushReplacement(
+                //         MaterialPageRoute(
+                //           builder: (context) => const ReponsiveLayout(
+                //             mobileScreenLayout: MobileScreenLayout(),
+                //             webScreenLayout: WebScreenLayout(),
+                //           ),
+                //         ),
+                //       );
+                //     } else {
+                //       ScaffoldMessenger.of(context).showSnackBar(
+                //         SnackBar(
+                //             content: Text('Đăng nhập bằng Facebook thất bại')),
+                //       );
+                //     }
+                //   },
+                //   child: Column(children: [
+                //     CircleAvatar(
+                //       backgroundImage: AssetImage('assets/fb_logo.jpg'),
+                //     ),
+                //     Text('Facebook')
+                //   ]),
+                // ),
+                // SizedBox(
+                //   width: 50,
+                // ),
                 InkWell(
                   onTap: () async {
                     User? user = await AuthMethods().signInWithGoogle();

@@ -1,3 +1,7 @@
+import 'package:appnongsan/models/user_model.dart';
+import 'package:appnongsan/resources/auth_methods.dart';
+import 'package:appnongsan/resources/firebase_methods.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'question.dart';
@@ -10,6 +14,47 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   int _selectedIndex = 3;
+  String? _name = "";
+  String? _email = "";
+
+  String _profileUrl = '';
+  Future<void> _loadUserData() async {
+  User? user = FirebaseAuth.instance.currentUser;
+
+  // Ensure the user is logged in before trying to fetch data
+  if (user != null) {
+    try {
+      // Fetch user data from your method
+      UserModel? userLog = await FirebaseMethods().getUserData(user.uid);
+
+      // Check if the state is still mounted before calling setState
+      if (mounted) {
+        if (userLog != null) {
+          setState(() {
+            _name = userLog.username;
+            _email = userLog.email;
+            _profileUrl = userLog.profileImg!;
+          });
+        } else {
+          print("User data not found.");
+        }
+      }
+    } catch (e) {
+      // Handle any errors that may occur
+      print('Error loading user data: $e');
+    }
+  } else {
+    print("User not logged in.");
+  }
+}
+
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _loadUserData();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,19 +78,33 @@ class _ProfilePageState extends State<ProfilePage> {
                 style: TextStyle(fontSize: 16, color: Colors.white),
               ),
               SizedBox(height: 20),
-              CircleAvatar(
-                radius: 40,
-                backgroundImage: AssetImage('assets/images/User.jpeg'),
-              ),
+              (_profileUrl == '')
+                  ? CircleAvatar(
+                      radius: 40,
+                      backgroundImage: AssetImage('assets/User.png'),
+                    )
+                  : CircleAvatar(
+                      radius: 40,
+                      backgroundImage: NetworkImage(_profileUrl),
+                    ),
               SizedBox(height: 6),
-              Text(
-                'NGUYỄN TUYẾT MAI',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+              (_name == '')
+                  ? Text(
+                      _email!,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      _name!,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
             ],
           ),
         ),
@@ -88,7 +147,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   );
                 },
-                child: Text('Chính sách', style: TextStyle(fontSize: 13, color: Colors.black)),
+                child: Text('Chính sách',
+                    style: TextStyle(fontSize: 13, color: Colors.black)),
               ),
             ),
             Divider(color: Colors.green, thickness: 1),
@@ -97,7 +157,8 @@ class _ProfilePageState extends State<ProfilePage> {
               minVerticalPadding: 0,
               dense: true,
               leading: Icon(Icons.history, size: 20),
-              title: Text('Lịch sử mua hàng', style: TextStyle(fontSize: 13, color: Colors.black)),
+              title: Text('Lịch sử mua hàng',
+                  style: TextStyle(fontSize: 13, color: Colors.black)),
             ),
             Divider(color: Colors.green, thickness: 1),
             ListTile(
@@ -105,8 +166,10 @@ class _ProfilePageState extends State<ProfilePage> {
               minVerticalPadding: 0,
               dense: true,
               leading: Icon(Icons.contact_phone, size: 20),
-              title: Text('Liên hệ', style: TextStyle(fontSize: 13, color: Colors.black)),
-              subtitle: Text('0123456789', style: TextStyle(fontSize: 13, color: Colors.black)),
+              title: Text('Liên hệ',
+                  style: TextStyle(fontSize: 13, color: Colors.black)),
+              subtitle: Text('0123456789',
+                  style: TextStyle(fontSize: 13, color: Colors.black)),
             ),
             Divider(color: Colors.green, thickness: 1),
             Padding(
@@ -114,18 +177,43 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Column(
-                    children: [
-                      FaIcon(FontAwesomeIcons.facebook, size: 22),
-                      Text('Facebook'),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      FaIcon(FontAwesomeIcons.google, size: 22), // Use correct icon
-                      Text('Google'),
-                    ],
-                  ),
+                  // Column(
+                  //   children: [
+                  //     FaIcon(FontAwesomeIcons.facebook, size: 22),
+                  //     Text('Facebook'),
+                  //   ],
+                  // ),
+                  // Column(
+                  //   children: [
+                  //     FaIcon(FontAwesomeIcons.google,
+                  //         size: 22), // Use correct icon
+                  //     Text('Google'),
+                  //   ],
+                  // ),
+                  TextButton(
+                    onPressed: () async {
+                      // Xử lý sự kiện khi nút được nhấn
+                      AuthMethods().signOut(context);
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.green, // Màu nền của nút
+                      padding: EdgeInsets.symmetric(
+                          vertical: 15,
+                          horizontal: 30), // Căn chỉnh khoảng cách
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20), // Bo góc nút
+                      ),
+                      elevation: 5, // Độ bóng khi nhấn
+                    ),
+                    child: Text(
+                      'Đăng xuất',
+                      style: TextStyle(
+                        fontSize: 16, // Kích thước chữ
+                        fontWeight: FontWeight.bold, // Độ dày chữ
+                        color: Colors.white, // Màu chữ
+                      ),
+                    ),
+                  )
                 ],
               ),
             ),

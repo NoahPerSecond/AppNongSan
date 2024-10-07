@@ -13,49 +13,53 @@ class HorizontalProductCard extends StatefulWidget {
 }
 
 class _HorizontalProductCardState extends State<HorizontalProductCard> {
-  bool _isFavorite = true;
+  bool _isFavorite = false; // Initialize to false
   int _quantity = 1;
+
   Future<void> _updateQuantity(int change) async {
     setState(() {
-      _quantity = (_quantity + change).clamp(
-          1, 100); // Cập nhật giá trị _quantity trước khi lưu vào Firestore
+      _quantity = (_quantity + change).clamp(1, 100); // Ensure quantity stays within bounds
     });
 
     User? user = FirebaseAuth.instance.currentUser;
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user!.uid)
-        .collection('favourites')
-        .doc(widget.productId)
-        .update({
-      "quantity": _quantity, // Lưu giá trị đã cập nhật vào Firestore
-    });
+    if (user != null) {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('favourites')
+          .doc(widget.productId)
+          .update({
+        "quantity": _quantity, // Update Firestore with new quantity
+      });
+    }
   }
 
   Future<void> removeFromFavourites() async {
     User? user = FirebaseAuth.instance.currentUser;
-    try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user!.uid)
-          .collection('favourites')
-          .doc(widget.productId)
-          .delete();
+    if (user != null) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('favourites')
+            .doc(widget.productId)
+            .delete();
 
-      // Cập nhật trạng thái UI sau khi xóa khỏi mục yêu thích
-      setState(() {
-        _isFavorite = false;
-      });
+        setState(() {
+          _isFavorite = false;
+        });
 
-      print('Product removed from favourites');
-    } catch (e) {
-      print('Failed to remove from favourites: $e');
+        print('Product removed from favourites');
+      } catch (e) {
+        print('Failed to remove from favourites: $e');
+      }
     }
   }
 
   Future<void> checkIfFavorite() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
+  User? user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    try {
       DocumentSnapshot doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -63,74 +67,45 @@ class _HorizontalProductCardState extends State<HorizontalProductCard> {
           .doc(widget.productId)
           .get();
 
-      if (doc.exists) {
+      // Check if the state is still mounted before calling setState
+      if (mounted) {
         setState(() {
-          _isFavorite = true;
+          _isFavorite = doc.exists; // Set based on document existence
         });
-      } else {
+      }
+    } catch (e) {
+      // Handle any errors that occur during the Firestore call
+      print('Error checking favorite status: $e');
+
+      // Optional: You can also set _isFavorite to false if there's an error
+      if (mounted) {
         setState(() {
-          _isFavorite = false; // Nếu không tồn tại, đảm bảo trạng thái được cập nhật
+          _isFavorite = false;
         });
       }
     }
   }
+}
 
-  // Future<void> toggleFavorite() async {
-  //   User? user = FirebaseAuth.instance.currentUser;
-  //   if (user == null) return;
 
-  //   if (_isFavorite) {
-  //     // Remove from favorites
-  //     await FirebaseFirestore.instance
-  //         .collection('users')
-  //         .doc(user.uid)
-  //         .collection('favourites')
-  //         .doc(widget.productId)
-  //         .delete();
-  //     setState(() {
-  //       _isFavorite = false; // Update the UI
-  //     });
-  //   } else {
-  //     // Add to favorites
-  //     final String category = widget.snap["category"];
-  //     final String description = widget.snap["description"];
-  //     final String imageUrl = widget.snap["imageUrl"];
-  //     final String name = widget.snap["name"];
-  //     final String origin = widget.snap["origin"];
-  //     final int stockQuantity = widget.snap["stockQuantity"];
-  //     final String price = widget.snap["price"];
-  //     final String newPrice = widget.snap["newPrice"];
-  //     final bool isSale = widget.snap["isSale"];
-  //     final int rating = widget.snap["rating"];
+  // Uncomment and use this method to toggle favorite status
+  Future<void> toggleFavorite() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
-  //     await FirebaseFirestore.instance
-  //         .collection('users')
-  //         .doc(user.uid)
-  //         .collection('favourites')
-  //         .doc(widget.productId)
-  //         .set({
-  //       'productId': widget.productId,
-  //       "category": category,
-  //       "description": description,
-  //       "imageUrl": imageUrl,
-  //       "name": name,
-  //       "origin": origin,
-  //       "stockQuantity": stockQuantity,
-  //       "price": price,
-  //       "newPrice": newPrice,
-  //       "isSale": isSale,
-  //       "rating": rating,
-  //       "quantity": _quantity,
-  //     });
-  //     setState(() {
-  //       _isFavorite = true; // Update the UI
-  //     });
-  //   }
-  // }
+    if (_isFavorite) {
+      await removeFromFavourites(); // Remove from favorites
+    } else {
+      // Add to favorites logic here
+      // Set Firestore document with product details
+      setState(() {
+        _isFavorite = true; // Update the UI
+      });
+    }
+  }
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     checkIfFavorite();
   }
@@ -208,18 +183,16 @@ class _HorizontalProductCardState extends State<HorizontalProductCard> {
                       Row(
                         children: [
                           IconButton(
-                            onPressed: () =>
-                                _updateQuantity(-1), // Giảm số lượng
+                            onPressed: () => _updateQuantity(-1),
                             icon: Icon(Icons.remove, size: 20),
                           ),
                           Text(
-                            '$_quantity', // Hiển thị số lượng
+                            '$_quantity',
                             style: TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.w500),
                           ),
                           IconButton(
-                            onPressed: () =>
-                                _updateQuantity(1), // Tăng số lượng
+                            onPressed: () => _updateQuantity(1),
                             icon: Icon(Icons.add, size: 20),
                           ),
                         ],
@@ -238,19 +211,11 @@ class _HorizontalProductCardState extends State<HorizontalProductCard> {
             radius: 18,
             backgroundColor: Colors.white,
             child: IconButton(
-              onPressed: () {
-                if (_isFavorite) {
-                  removeFromFavourites(); // Xóa khỏi yêu thích
-                } 
-              },
+              onPressed: toggleFavorite, // Toggle favorite status
               icon: Icon(
-                _isFavorite
-                    ? Icons.favorite // Red icon if favorite
-                    : Icons.favorite_outline, // Outline if not favorite
+                _isFavorite ? Icons.favorite : Icons.favorite_outline,
                 size: 20,
-                color: _isFavorite
-                    ? Colors.red
-                    : Colors.black, // Change color based on state
+                color: _isFavorite ? Colors.red : Colors.black,
               ),
             ),
           ),

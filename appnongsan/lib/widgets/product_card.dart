@@ -21,12 +21,13 @@ class _ProductCardState extends State<ProductCard> {
     super.initState();
     checkIfFavorite();
   }
+  
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    checkIfFavorite(); // Kiểm tra lại trạng thái yêu thích khi widget thay đổi
-  }
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   checkIfFavorite(); // Kiểm tra lại trạng thái yêu thích khi widget thay đổi
+  // }
 
   Future<void> removeFromFavourites() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -50,8 +51,9 @@ class _ProductCardState extends State<ProductCard> {
   }
 
   Future<void> checkIfFavorite() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
+  User? user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    try {
       DocumentSnapshot doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -59,17 +61,25 @@ class _ProductCardState extends State<ProductCard> {
           .doc(widget.productId)
           .get();
 
-      if (doc.exists) {
+      // Check if the state is still mounted before calling setState
+      if (mounted) {
         setState(() {
-          _isFavorite = true;
+          _isFavorite = doc.exists; // Set based on document existence
         });
-      } else {
+      }
+    } catch (e) {
+      print('Error checking favorite status: $e');
+      // You may also want to set _isFavorite to false here as a fallback
+      if (mounted) {
         setState(() {
-          _isFavorite = false; // Nếu không tồn tại, đảm bảo trạng thái được cập nhật
+          _isFavorite = false;
         });
       }
     }
   }
+}
+
+  
 
   Future<void> addToFavourites() async {
     User? user = FirebaseAuth.instance.currentUser;

@@ -20,6 +20,8 @@ dependencies:
   carousel_slider: ^5.0.0
   flutter_facebook_auth: ^7.1.0
   shared_preferences: ^2.3.2
+  uuid: ^4.5.1
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:
@@ -38,6 +40,6 @@ flutter:
    - assets/apple.png
    - assets/broccoli.png
    - assets/wheat.png
-   - assets/User.jpeg
+   - assets/User.png
    - assets/Sale.jpeg
    - assets/Sign.jpeg

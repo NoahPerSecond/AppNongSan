@@ -10,6 +10,7 @@ import 'package:appnongsan/widgets/login_textfield.dart';
 import 'package:appnongsan/widgets/password_field.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -22,7 +23,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passController = TextEditingController();
   TextEditingController rePassController = TextEditingController();
-
+  String uid = Uuid().v4();
   bool isLoading = false;
 
   void sendEmailVerification() async {
@@ -32,6 +33,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           builder: (context) => AuthScreen(
                 gmail: emailController.text,
                 password: passController.text,
+                uid: uid,
               )));
     }
   }
@@ -40,9 +42,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     setState(() {
       isLoading = true;
     });
+    
     String res = await AuthMethods().signUpUser(
       email: emailController.text,
       password: passController.text,
+      uid: uid
     );
     print(res);
     if (res == 'success') {
@@ -53,6 +57,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               builder: (context) => AuthScreen(
                     gmail: emailController.text,
                     password: passController.text,
+                    uid: uid,
                   )),
         );
       }

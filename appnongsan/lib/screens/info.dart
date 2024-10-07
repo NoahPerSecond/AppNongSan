@@ -1,5 +1,15 @@
+import 'dart:io';
+
+import 'package:appnongsan/models/user_model.dart';
+import 'package:appnongsan/resources/firebase_methods.dart';
+import 'package:appnongsan/widgets/login_button.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:uuid/uuid.dart';
 
 class AccountInfoScreen extends StatefulWidget {
   @override
@@ -7,14 +17,114 @@ class AccountInfoScreen extends StatefulWidget {
 }
 
 class _AccountInfoScreenState extends State<AccountInfoScreen> {
+  XFile? _image;
+  final picker = ImagePicker();
+  User? user = FirebaseAuth.instance.currentUser;
   bool _shouldBlink = false;
-  String _name = "Nguyễn Tuyết Mai";
-  String _phone = "0123456789";
-  String _email = "nguyentuyetmail123@gmail.com";
-  String _dob = "01/01/1999";
 
-  void _showUpdateDialog(BuildContext context, String title, String currentValue, Function(String) onUpdate) {
-    TextEditingController _controller = TextEditingController(text: currentValue);
+  Future<void> _pickImage(ImageSource source) async {
+    final pickedFile = await picker.pickImage(source: source);
+    if (pickedFile != null) {
+      setState(() {
+        _image = pickedFile;
+      });
+    }
+  }
+
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(Icons.camera_alt),
+              title: Text('Chụp ảnh'),
+              onTap: () {
+                Navigator.of(context).pop(); // Đóng bảng chọn
+                _pickImage(ImageSource.camera); // Chụp ảnh từ camera
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_library),
+              title: Text('Chọn từ thư viện'),
+              onTap: () {
+                Navigator.of(context).pop(); // Đóng bảng chọn
+                _pickImage(ImageSource.gallery); // Chọn ảnh từ thư viện
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<String> uploadImageToFirebase(File imageFile) async {
+    String fileName = Uuid().v4(); // Generate a unique filename
+    Reference storageRef =
+        FirebaseStorage.instance.ref().child('images/$fileName.jpg');
+    UploadTask uploadTask = storageRef.putFile(imageFile);
+    TaskSnapshot taskSnapshot = await uploadTask;
+    return await taskSnapshot.ref.getDownloadURL();
+  }
+
+  Future<void> updateUserData(String uid, String name, String phone, String dob,
+      String profileUrl, String address) async {
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(uid).update({
+        'username': name,
+        'phoneNum': phone,
+        'birthDay': dob,
+        'profileImg': profileUrl,
+        'address': address
+      });
+      print('User updated successfully');
+    } catch (e) {
+      print('Failed to update user: $e');
+    }
+  }
+
+  String _name = "";
+  String _phone = "";
+  String _email = "";
+  String _dob = "";
+  String _profileUrl = '';
+  String _address = '';
+  Future<void> getProfileImg() async {
+    String updatedPprofileUrl;
+    // if(_image!.path.isEmpty)
+    // {
+    //   updatedPprofileUrl = '';
+    // }
+    updatedPprofileUrl = await uploadImageToFirebase(File(_image!.path));
+    setState(() {
+      _profileUrl = updatedPprofileUrl;
+    });
+  }
+
+  Future<void> _loadUserData() async {
+    // UID của người dùng hiện tại
+    UserModel? userLog = await FirebaseMethods().getUserData(user!.uid);
+
+    if (user != null) {
+      setState(() {
+        _name = userLog!.username!;
+        _phone = userLog.phoneNum!;
+        _email = userLog.email;
+        _dob = userLog.birthDay!;
+        _profileUrl = userLog.profileImg!;
+        _address = userLog.address!;
+      });
+    } else {
+      print("Không tìm thấy dữ liệu người dùng");
+    }
+  }
+
+  void _showUpdateDialog(BuildContext context, String title,
+      String currentValue, Function(String) onUpdate) {
+    TextEditingController _controller =
+        TextEditingController(text: currentValue);
 
     showModalBottomSheet(
       context: context,
@@ -47,7 +157,8 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                   ),
-                  child: Text('Cập nhật', style: TextStyle(color: Colors.white)),
+                  child:
+                      Text('Cập nhật', style: TextStyle(color: Colors.white)),
                   onPressed: () {
                     onUpdate(_controller.text);
                     Navigator.of(context).pop();
@@ -61,12 +172,23 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
     );
   }
 
-  void _showDatePicker(BuildContext context) {
-    List<String> dobParts = _dob.split('/');
-    int _day = int.parse(dobParts[0]);
-    int _month = int.parse(dobParts[1]);
-    int _year = int.parse(dobParts[2]);
+  void _showDatePicker() async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
 
+    if (pickedDate != null) {
+      setState(() {
+        // Chuyển đổi sang định dạng chuỗi
+        _dob = "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
+      });
+    }
+  }
+
+  void _showBottomSheet() {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -77,68 +199,20 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
             children: [
               Text(
                 'Chọn ngày sinh',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: CupertinoPicker(
-                      itemExtent: 30,
-                      onSelectedItemChanged: (value) {
-                        _day = value + 1;
-                      },
-                      children: List<Widget>.generate(31, (index) {
-                        return Center(child: Text('${index + 1}'));
-                      }),
-                      scrollController: FixedExtentScrollController(initialItem: _day - 1),
-                    ),
-                  ),
-                  Expanded(
-                    child: CupertinoPicker(
-                      itemExtent: 30,
-                      onSelectedItemChanged: (value) {
-                        _month = value + 1;
-                      },
-                      children: List<Widget>.generate(12, (index) {
-                        return Center(child: Text('${index + 1}'));
-                      }),
-                      scrollController: FixedExtentScrollController(initialItem: _month - 1),
-                    ),
-                  ),
-                  Expanded(
-                    child: CupertinoPicker(
-                      itemExtent: 30,
-                      onSelectedItemChanged: (value) {
-                        _year = value + 1; // Giả sử từ 1900 đến 2024
-                      },
-                      children: List<Widget>.generate(2024, (index) {
-                        return Center(child: Text('${index + 1}'));
-                      }),
-                      scrollController: FixedExtentScrollController(initialItem: _year - 1),
-                    ),
-                  ),
-                ],
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                  ),
-                  child: Text('Cập nhật', style: TextStyle(color: Colors.white)),
-                  onPressed: () {
-                    setState(() {
-                      // Định dạng lại ngày, tháng để có 2 chữ số
-                      String formattedDay = _day.toString().padLeft(2, '0');
-                      String formattedMonth = _month.toString().padLeft(2, '0');
-                      _dob = '$formattedDay/$formattedMonth/$_year';
-                    });
-                    Navigator.of(context).pop();
-                  },
-                ),
+              ElevatedButton(
+                onPressed: () {
+                  _showDatePicker();
+                  Navigator.pop(context); // Đóng ModalBottomSheet
+                },
+                child: Text('Chọn ngày'),
+              ),
+              SizedBox(height: 20),
+              Text(
+                _dob ?? 'Chưa chọn ngày',
+                style: TextStyle(fontSize: 16),
               ),
             ],
           ),
@@ -160,8 +234,16 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _loadUserData();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
@@ -177,7 +259,7 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
         centerTitle: true,
         toolbarHeight: 80,
       ),
-      body: Center(
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.only(top: 20),
           child: Column(
@@ -186,105 +268,28 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
               Center(
                 child: Container(
                   margin: EdgeInsets.only(top: 20, bottom: 60),
-                  child: CircleAvatar(
-                    radius: 40,
-                    backgroundImage: AssetImage('assets/images/User.jpeg'),
+                  child: InkWell(
+                    onTap: () {
+                      _showImagePickerOptions();
+                      getProfileImg();
+                    },
+                    child: (_profileUrl == '')
+                        ? CircleAvatar(
+                            radius: 40,
+                            backgroundImage: AssetImage('assets/User.png'),
+                          )
+                        : CircleAvatar(
+                            radius: 40,
+                            backgroundImage: NetworkImage(_profileUrl),
+                          ),
                   ),
                 ),
               ),
-              GestureDetector(
-                onTap: () => _blinkText(),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        SizedBox(width: 20),
-                        GestureDetector(
-                          onTap: () => _blinkText(),
-                          child: Text(
-                            'Họ và tên',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => _showUpdateDialog(context, 'Họ và Tên', _name, (newValue) {
-                              setState(() {
-                                _name = newValue;
-                              });
-                            }),
-                            child: AnimatedOpacity(
-                              opacity: _shouldBlink ? 0.3 : 1.0,
-                              duration: Duration(milliseconds: 500),
-                              child: Container(
-                                alignment: Alignment.centerRight,
-                                padding: EdgeInsets.only(right: 30),
-                                child: Text(
-                                  _name,
-                                  style: TextStyle(fontSize: 13, color: Colors.grey),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 12),
-                    Divider(color: Colors.green),
-                    SizedBox(height: 12),
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: () => _blinkText(),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        SizedBox(width: 20),
-                        GestureDetector(
-                          onTap: () => _blinkText(),
-                          child: Text(
-                            'Số điện thoại',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => _showUpdateDialog(context, 'Số điện thoại', _phone, (newValue) {
-                              setState(() {
-                                _phone = newValue;
-                              });
-                            }),
-                            child: AnimatedOpacity(
-                              opacity: _shouldBlink ? 0.3 : 1.0,
-                              duration: Duration(milliseconds: 500),
-                              child: Container(
-                                alignment: Alignment.centerRight,
-                                padding: EdgeInsets.only(right: 50),
-                                child: Text(
-                                  _phone,
-                                  style: TextStyle(fontSize: 13, color: Colors.grey),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 12),
-                    Divider(color: Colors.green),
-                    SizedBox(height: 12),
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: () => _blinkText(),
-                child: Column(
-                  children: [
-                    Row(
+              Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         SizedBox(width: 20),
@@ -292,16 +297,18 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
                           onTap: () => _blinkText(),
                           child: Text(
                             'Email',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.bold),
                           ),
                         ),
                         Expanded(
                           child: GestureDetector(
-                            onTap: () => _showUpdateDialog(context, 'Email', _email, (newValue) {
-                              setState(() {
-                                _email = newValue;
-                              });
-                            }),
+                            // onTap: () => _showUpdateDialog(
+                            //     context, 'Email', _email, (newValue) {
+                            //   setState(() {
+                            //     _email = newValue;
+                            //   });
+                            // }),
                             child: AnimatedOpacity(
                               opacity: _shouldBlink ? 0.3 : 1.0,
                               duration: Duration(milliseconds: 500),
@@ -310,7 +317,8 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
                                 padding: EdgeInsets.only(right: 30),
                                 child: Text(
                                   _email,
-                                  style: TextStyle(fontSize: 13, color: Colors.grey),
+                                  style: TextStyle(
+                                      fontSize: 13, color: Colors.grey),
                                 ),
                               ),
                             ),
@@ -318,30 +326,148 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 12),
-                    Divider(color: Colors.green),
-                    SizedBox(height: 12),
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: () => _blinkText(),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        SizedBox(width: 20),
-                        GestureDetector(
-                          onTap: () => _blinkText(),
-                          child: Text(
-                            'Ngày sinh',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                  Divider(color: Colors.green),
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: InkWell(
+                      onTap: () {
+                              _blinkText();
+                              _showUpdateDialog(context, 'Họ và tên', _name,
+                                  (newValue) {
+                                setState(() {
+                                  _name = newValue;
+                                });
+                              });
+                            },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          SizedBox(width: 20),
+                          Text(
+                            'Họ và tên',
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.bold),
                           ),
-                        ),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => _showDatePicker(context),
+                          Expanded(
+                            child: AnimatedOpacity(
+                              opacity: _shouldBlink ? 0.3 : 1.0,
+                              duration: Duration(milliseconds: 500),
+                              child: Container(
+                                alignment: Alignment.centerRight,
+                                padding: EdgeInsets.only(right: 30),
+                                child: Text(
+                                  _name,
+                                  style: TextStyle(
+                                      fontSize: 13, color: Colors.grey),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Divider(color: Colors.green),
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: InkWell(
+                      onTap: () {
+                              _blinkText();
+                              _showUpdateDialog(context, 'Số điện thoại', _phone,
+                                  (newValue) {
+                                setState(() {
+                                  _phone = newValue;
+                                });
+                              });
+                            },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          SizedBox(width: 20),
+                          Text(
+                            'Số điện thoại',
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                          Expanded(
+                            child: AnimatedOpacity(
+                              opacity: _shouldBlink ? 0.3 : 1.0,
+                              duration: Duration(milliseconds: 500),
+                              child: Container(
+                                alignment: Alignment.centerRight,
+                                padding: EdgeInsets.only(right: 30),
+                                child: Text(
+                                  _phone,
+                                  style: TextStyle(
+                                      fontSize: 13, color: Colors.grey),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Divider(color: Colors.green),
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: InkWell(
+                      onTap: () {
+                              _blinkText();
+                              _showUpdateDialog(context, 'Địa chỉ', _address,
+                                  (newValue) {
+                                setState(() {
+                                  _address = newValue;
+                                });
+                              });
+                            },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          SizedBox(width: 20),
+                          Text(
+                            'Địa chỉ',
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                          Expanded(
+                            child: AnimatedOpacity(
+                              opacity: _shouldBlink ? 0.3 : 1.0,
+                              duration: Duration(milliseconds: 500),
+                              child: Container(
+                                alignment: Alignment.centerRight,
+                                padding: EdgeInsets.only(right: 30),
+                                child: Text(
+                                  _address,
+                                  style: TextStyle(
+                                      fontSize: 13, color: Colors.grey),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Divider(color: Colors.green),
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: InkWell(
+                      onTap: () {
+                              _blinkText();
+                              _showDatePicker();
+                            },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          SizedBox(width: 20),
+                          Text(
+                            'Ngày sinh',
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                          Expanded(
                             child: AnimatedOpacity(
                               opacity: _shouldBlink ? 0.3 : 1.0,
                               duration: Duration(milliseconds: 500),
@@ -350,20 +476,228 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
                                 padding: EdgeInsets.only(right: 30),
                                 child: Text(
                                   _dob,
-                                  style: TextStyle(fontSize: 13, color: Colors.grey),
+                                  style: TextStyle(
+                                      fontSize: 13, color: Colors.grey),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    SizedBox(height: 12),
-                    Divider(color: Colors.green),
-                    SizedBox(height: 12),
-                  ],
-                ),
+                  ),
+                  Divider(color: Colors.green),
+                ],
               ),
+              // Column(
+              //   children: [
+              //     InkWell(
+              //       onTap: () {
+              //         _showUpdateDialog(context, 'Họ và Tên', _name,
+              //             (newValue) {
+              //           setState(() {
+              //             _name = newValue;
+              //           });
+              //         });
+              //         _blinkText();
+              //       },
+              //       child: Row(
+              //         mainAxisAlignment: MainAxisAlignment.start,
+              //         children: [
+              //           SizedBox(width: 20),
+              //           Text(
+              //             'Họ và tên',
+              //             style: TextStyle(
+              //                 fontSize: 14, fontWeight: FontWeight.bold),
+              //           ),
+              //           Expanded(
+              //             child: GestureDetector(
+              //               onTap: () => _showUpdateDialog(
+              //                   context, 'Họ và Tên', _name, (newValue) {
+              //                 setState(() {
+              //                   _name = newValue;
+              //                 });
+              //               }),
+              //               child: AnimatedOpacity(
+              //                 opacity: _shouldBlink ? 0.3 : 1.0,
+              //                 duration: Duration(milliseconds: 500),
+              //                 child: Container(
+              //                   alignment: Alignment.centerRight,
+              //                   padding: EdgeInsets.only(right: 30),
+              //                   child: Text(
+              //                     _name,
+              //                     style: TextStyle(
+              //                         fontSize: 13, color: Colors.grey),
+              //                   ),
+              //                 ),
+              //               ),
+              //             ),
+              //           ),
+              //         ],
+              //       ),
+              //     ),
+              //     SizedBox(height: 12),
+              //     Divider(color: Colors.green),
+              //     SizedBox(height: 12),
+              //   ],
+              // ),
+              // Column(
+              //   children: [
+              //     Row(
+              //       mainAxisAlignment: MainAxisAlignment.start,
+              //       children: [
+              //         SizedBox(width: 20),
+              //         GestureDetector(
+              //           onTap: () => _blinkText(),
+              //           child: Text(
+              //             'Số điện thoại',
+              //             style: TextStyle(
+              //                 fontSize: 14, fontWeight: FontWeight.bold),
+              //           ),
+              //         ),
+              //         Expanded(
+              //           child: GestureDetector(
+              //             onTap: () => _showUpdateDialog(
+              //                 context, 'Số điện thoại', _phone, (newValue) {
+              //               setState(() {
+              //                 _phone = newValue;
+              //               });
+              //             }),
+              //             child: AnimatedOpacity(
+              //               opacity: _shouldBlink ? 0.3 : 1.0,
+              //               duration: Duration(milliseconds: 500),
+              //               child: Container(
+              //                 alignment: Alignment.centerRight,
+              //                 padding: EdgeInsets.only(right: 50),
+              //                 child: Text(
+              //                   _phone,
+              //                   style: TextStyle(
+              //                       fontSize: 13, color: Colors.grey),
+              //                 ),
+              //               ),
+              //             ),
+              //           ),
+              //         ),
+              //       ],
+              //     ),
+              //     SizedBox(height: 12),
+              //     Divider(color: Colors.green),
+              //     SizedBox(height: 12),
+              //   ],
+              // ),
+              // GestureDetector(
+              //   onTap: () => _blinkText(),
+              //   child: Column(
+              //     children: [
+              //       Row(
+              //         mainAxisAlignment: MainAxisAlignment.start,
+              //         children: [
+              //           SizedBox(width: 20),
+              //           GestureDetector(
+              //             onTap: () => _blinkText(),
+              //             child: Text(
+              //               'Ngày sinh',
+              //               style: TextStyle(
+              //                   fontSize: 14, fontWeight: FontWeight.bold),
+              //             ),
+              //           ),
+              //           Expanded(
+              //             child: GestureDetector(
+              //               onTap: () => _showDatePicker(context),
+              //               child: AnimatedOpacity(
+              //                 opacity: _shouldBlink ? 0.3 : 1.0,
+              //                 duration: Duration(milliseconds: 500),
+              //                 child: Container(
+              //                   alignment: Alignment.centerRight,
+              //                   padding: EdgeInsets.only(right: 30),
+              //                   child: Text(
+              //                     _dob,
+              //                     style: TextStyle(
+              //                         fontSize: 13, color: Colors.grey),
+              //                   ),
+              //                 ),
+              //               ),
+              //             ),
+              //           ),
+              //         ],
+              //       ),
+              //       SizedBox(height: 12),
+              //       Divider(color: Colors.green),
+              //       SizedBox(height: 12),
+              //     ],
+              //   ),
+              // ),
+              // GestureDetector(
+              //   onTap: () => _blinkText(),
+              //   child: Column(
+              //     children: [
+              //       Row(
+              //         mainAxisAlignment: MainAxisAlignment.start,
+              //         children: [
+              //           SizedBox(width: 20),
+              //           GestureDetector(
+              //             onTap: () => _blinkText(),
+              //             child: Text(
+              //               'Địa chỉ',
+              //               style: TextStyle(
+              //                   fontSize: 14, fontWeight: FontWeight.bold),
+              //             ),
+              //           ),
+              //           Expanded(
+              //             child: GestureDetector(
+              //               onTap: () => _showUpdateDialog(
+              //                   context, 'Địa chỉ', _address, (newValue) {
+              //                 setState(() {
+              //                   _address = newValue;
+              //                 });
+              //               }),
+              //               child: AnimatedOpacity(
+              //                 opacity: _shouldBlink ? 0.3 : 1.0,
+              //                 duration: Duration(milliseconds: 500),
+              //                 child: Container(
+              //                   alignment: Alignment.centerRight,
+              //                   padding: EdgeInsets.only(right: 30),
+              //                   child: Text(
+              //                     _address,
+              //                     style: TextStyle(
+              //                         fontSize: 13, color: Colors.grey),
+              //                   ),
+              //                 ),
+              //               ),
+              //             ),
+              //           ),
+              //         ],
+              //       ),
+              //       SizedBox(height: 12),
+              //       Divider(color: Colors.green),
+              //       SizedBox(height: 12),
+              //     ],
+              //   ),
+              // ),
+              TextButton(
+                onPressed: () async {
+                  // Xử lý sự kiện khi nút được nhấn
+                  await updateUserData(
+                      user!.uid, _name, _phone, _dob, _profileUrl, _address);
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.green, // Màu nền của nút
+                  padding: EdgeInsets.symmetric(
+                      vertical: 15, horizontal: 30), // Căn chỉnh khoảng cách
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20), // Bo góc nút
+                  ),
+                  elevation: 5, // Độ bóng khi nhấn
+                ),
+                child: Text(
+                  'Cập nhật thông tin',
+                  style: TextStyle(
+                    fontSize: 16, // Kích thước chữ
+                    fontWeight: FontWeight.bold, // Độ dày chữ
+                    color: Colors.white, // Màu chữ
+                  ),
+                ),
+              )
             ],
           ),
         ),
