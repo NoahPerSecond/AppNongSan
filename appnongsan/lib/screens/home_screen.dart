@@ -1,7 +1,9 @@
+import 'package:appnongsan/screens/cart_screen.dart';
 import 'package:appnongsan/utils/utils.dart';
 import 'package:appnongsan/widgets/product_card.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,6 +15,73 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _cartItemCount = 0;
+  Future<int> getCartItemCount() async {
+  User? user = FirebaseAuth.instance.currentUser;
+  int totalQuantity = 0;
+  int countItem = 0;
+  if (user != null) {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      // Access the 'cart' array
+      List<dynamic> cartItems = userDoc['cart'] ?? [];
+      countItem = cartItems.length;
+      // Sum the quantities
+      for (var item in cartItems) {
+        totalQuantity += (item['quantity'] as int);
+      }
+    } catch (e) {
+      print('Error getting cart quantity: $e');
+    }
+  }
+
+  return countItem;
+}
+
+
+  Future<void> _loadCartItemCount() async {
+    int itemCount = await getCartItemCount();
+    setState(() {
+      _cartItemCount = itemCount;
+    });
+  }
+
+  void listenToCartChanges() {
+  User? user = FirebaseAuth.instance.currentUser;
+  int countItem = 0;
+  FirebaseFirestore.instance
+      .collection('users')
+      .doc(user!.uid)
+      .snapshots()
+      .listen((DocumentSnapshot snapshot) {
+        if (snapshot.exists) {
+          int totalQuantity = 0;
+          List<dynamic> cartItems = snapshot['cart'] ?? [];
+          countItem = cartItems.length;
+          // for (var item in cartItems) {
+          //   totalQuantity += (item['quantity'] as int);
+          // }
+
+          setState(() {
+            _cartItemCount = countItem;
+          });
+        }
+      });
+}
+
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _loadCartItemCount();
+    listenToCartChanges();
+  }
+
   @override
   Widget build(BuildContext context) {
     List<String> _searchHistory = [];
@@ -41,6 +110,8 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
+    
+
     final GlobalKey<ScaffoldState> scaffoldKey =
         GlobalKeyManager().getScaffoldKey;
 
@@ -66,13 +137,48 @@ class _HomeScreenState extends State<HomeScreen> {
         centerTitle: true,
         backgroundColor: Colors.green,
         actions: [
-          IconButton(
-              onPressed: () {},
-              icon: Icon(
-                Icons.shopping_cart,
-                color: Colors.white,
-                size: 40,
-              ))
+          Stack(
+            children: [
+              IconButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => CartScreen()),
+                  );
+                },
+                icon: Icon(
+                  Icons.shopping_cart,
+                  color: Colors.white,
+                  size: 40,
+                ),
+              ),
+              // Badge to show number of items in cart
+              if (_cartItemCount > 0)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    padding: EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    constraints: BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
+                    child: Text(
+                      '$_cartItemCount',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(100),
@@ -233,7 +339,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             scrollDirection: Axis.horizontal,
                             itemCount: snapshot.data!.docs.length,
                             itemBuilder: (context, index) => ProductCard(
-                                snap: snapshot.data!.docs[index].data(),productId: snapshot.data!.docs[index].id));
+                                snap: snapshot.data!.docs[index].data(),
+                                productId: snapshot.data!.docs[index].id));
                       }),
                 ),
               ),
