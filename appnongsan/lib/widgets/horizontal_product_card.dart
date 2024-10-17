@@ -162,8 +162,9 @@ class _HorizontalProductCardState extends State<HorizontalProductCard> {
     if (user != null) {
       // Update the quantity of the cart item
       // To handle quantity updates correctly, consider removing the item first
-      await removeFromCart();
-      await addToCart(); // Then re-add with the new quantity
+      // await removeFromCart();
+      // await addToCart(); // Then re-add with the new quantity
+      print(_quantity);
     }
   }
 

@@ -62,83 +62,85 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Tìm kiếm',
-                      hintStyle: TextStyle(color: Colors.grey),
-                      fillColor: Colors.white,
-                      filled: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
+    return SafeArea(
+      child: Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Tìm kiếm',
+                        hintStyle: TextStyle(color: Colors.grey),
+                        fillColor: Colors.white,
+                        filled: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide.none,
+                        ),
+                        prefixIcon: Icon(Icons.search),
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            _filterHistory(); // Cập nhật danh sách khi xóa
+                          },
+                        ),
                       ),
-                      prefixIcon: Icon(Icons.search),
-                      suffixIcon: IconButton(
-                        icon: Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          _filterHistory(); // Cập nhật danh sách khi xóa
-                        },
-                      ),
+                      onSubmitted: (value) => _performSearch(),
                     ),
-                    onSubmitted: (value) => _performSearch(),
                   ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text(
-                    'Hủy',
-                    style: TextStyle(color: Colors.green),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Tìm kiếm gần đây',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                TextButton(
-                  onPressed: _clearSearchHistory,
-                  child: Text(
-                    'Xóa',
-                    style: TextStyle(color: Colors.green),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 10),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _filteredHistory.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(_filteredHistory[index]),
-                    onTap: () {
-                      _searchController.text = _filteredHistory[index];
-                      _performSearch();
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
                     },
-                  );
-                },
+                    child: Text(
+                      'Hủy',
+                      style: TextStyle(color: Colors.green),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Tìm kiếm gần đây',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  TextButton(
+                    onPressed: _clearSearchHistory,
+                    child: Text(
+                      'Xóa',
+                      style: TextStyle(color: Colors.green),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _filteredHistory.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text(_filteredHistory[index]),
+                      onTap: () {
+                        _searchController.text = _filteredHistory[index];
+                        _performSearch();
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
