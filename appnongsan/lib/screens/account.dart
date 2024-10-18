@@ -1,6 +1,7 @@
 import 'package:appnongsan/models/user_model.dart';
 import 'package:appnongsan/resources/auth_methods.dart';
 import 'package:appnongsan/resources/firebase_methods.dart';
+import 'package:appnongsan/screens/purchase_history_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -19,35 +20,34 @@ class _ProfilePageState extends State<ProfilePage> {
 
   String _profileUrl = '';
   Future<void> _loadUserData() async {
-  User? user = FirebaseAuth.instance.currentUser;
+    User? user = FirebaseAuth.instance.currentUser;
 
-  // Ensure the user is logged in before trying to fetch data
-  if (user != null) {
-    try {
-      // Fetch user data from your method
-      UserModel? userLog = await FirebaseMethods().getUserData(user.uid);
+    // Ensure the user is logged in before trying to fetch data
+    if (user != null) {
+      try {
+        // Fetch user data from your method
+        UserModel? userLog = await FirebaseMethods().getUserData(user.uid);
 
-      // Check if the state is still mounted before calling setState
-      if (mounted) {
-        if (userLog != null) {
-          setState(() {
-            _name = userLog.username;
-            _email = userLog.email;
-            _profileUrl = userLog.profileImg!;
-          });
-        } else {
-          print("User data not found.");
+        // Check if the state is still mounted before calling setState
+        if (mounted) {
+          if (userLog != null) {
+            setState(() {
+              _name = userLog.username;
+              _email = userLog.email;
+              _profileUrl = userLog.profileImg!;
+            });
+          } else {
+            print("User data not found.");
+          }
         }
+      } catch (e) {
+        // Handle any errors that may occur
+        print('Error loading user data: $e');
       }
-    } catch (e) {
-      // Handle any errors that may occur
-      print('Error loading user data: $e');
+    } else {
+      print("User not logged in.");
     }
-  } else {
-    print("User not logged in.");
   }
-}
-
 
   @override
   void initState() {
@@ -152,13 +152,19 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             Divider(color: Colors.green, thickness: 1),
-            ListTile(
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
-              minVerticalPadding: 0,
-              dense: true,
-              leading: Icon(Icons.history, size: 20),
-              title: Text('Lịch sử mua hàng',
-                  style: TextStyle(fontSize: 13, color: Colors.black)),
+            InkWell(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => PurchaseHistoryPage()),
+              ),
+              child: ListTile(
+                contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
+                minVerticalPadding: 0,
+                dense: true,
+                leading: Icon(Icons.history, size: 20),
+                title: Text('Lịch sử mua hàng',
+                    style: TextStyle(fontSize: 13, color: Colors.black)),
+              ),
             ),
             Divider(color: Colors.green, thickness: 1),
             ListTile(

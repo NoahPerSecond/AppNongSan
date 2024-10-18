@@ -12,6 +12,7 @@ class ProductModel {
   final String price;
   final String newPrice;
   final int rating;
+  final String date;
 
   ProductModel({
     required this.price,
@@ -24,6 +25,7 @@ class ProductModel {
     required this.origin,
     required this.stockQuantity,
     required this.uid,
+    required this.date
   });
 
   Map<String, dynamic> toJson() => {
@@ -34,6 +36,7 @@ class ProductModel {
         "name": name,
         "origin": origin,
         "stockQuantity": stockQuantity,
+        "date":date
       };
 
   static ProductModel fromSnap(DocumentSnapshot snap) {
@@ -48,6 +51,9 @@ class ProductModel {
         stockQuantity: snapshot['stockQuantity'],
         price: snapshot['price'],
         newPrice: snapshot['newPrice'],
-        rating: snapshot['rating']);
+        rating: snapshot['rating'],
+        date: snapshot['date']
+        );
+        
   }
 }

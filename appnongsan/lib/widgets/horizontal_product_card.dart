@@ -1,6 +1,8 @@
+import 'package:appnongsan/screens/product_detail_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class HorizontalProductCard extends StatefulWidget {
   final snap;
@@ -16,6 +18,7 @@ class _HorizontalProductCardState extends State<HorizontalProductCard> {
   bool _isFavorite = false; // Initialize to false
   int _quantity = 1;
   bool _isInCart = false;
+  final formatCurrency = NumberFormat.currency(locale: 'vi_VN', symbol: '');
 
   @override
   void initState() {
@@ -23,8 +26,6 @@ class _HorizontalProductCardState extends State<HorizontalProductCard> {
     checkIfFavorite();
     checkIfInCart();
   }
-
-  
 
   Future<void> addToCart() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -153,9 +154,11 @@ class _HorizontalProductCardState extends State<HorizontalProductCard> {
       print('Failed to add to favourites: $e');
     }
   }
+
   Future<void> _updateQuantity(int change) async {
     setState(() {
-      _quantity = (_quantity + change).clamp(1, 100); // Ensure quantity stays within bounds
+      _quantity = (_quantity + change)
+          .clamp(1, 100); // Ensure quantity stays within bounds
     });
 
     User? user = FirebaseAuth.instance.currentUser;
@@ -170,148 +173,166 @@ class _HorizontalProductCardState extends State<HorizontalProductCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Padding(
-          padding: EdgeInsets.all(8),
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(width: 0.3),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image(
-                    width: 120,
-                    height: 120,
-                    fit: BoxFit.cover,
-                    image: NetworkImage(
-                      widget.snap['imageUrl'].toString(),
+    return InkWell(
+      onTap: () =>Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => ProductDetailScreen(productId: widget.productId!,)),
+                  ),
+      child: Stack(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(8),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(width: 0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image(
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.cover,
+                      image: NetworkImage(
+                        widget.snap['imageUrl'].toString(),
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(width: 10),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.snap['name'],
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                  SizedBox(width: 10),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.snap['name'],
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 5),
-                      Row(
-                        children: List.generate(5, (index) {
-                          return Icon(
-                            size: 15,
-                            Icons.star,
-                            color: index < widget.snap['rating']
-                                ? Colors.yellow
-                                : Colors.grey,
-                          );
-                        }),
-                      ),
-                      SizedBox(height: 5),
-                      (widget.snap['isSale'])
-                          ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  widget.snap['newPrice'].toString(),
-                                  style: TextStyle(
-                                    color: Colors.green,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
+                        SizedBox(height: 5),
+                        Row(
+                          children: List.generate(5, (index) {
+                            return Icon(
+                              size: 15,
+                              Icons.star,
+                              color: index < widget.snap['rating']
+                                  ? Colors.yellow
+                                  : Colors.grey,
+                            );
+                          }),
+                        ),
+                        SizedBox(height: 5),
+                        (widget.snap['isSale'])
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    formatCurrency
+                                            .format(widget.snap['newPrice'])
+                                            .toString() +
+                                        'VND',
+                                    style: TextStyle(
+                                      color: Colors.green,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  widget.snap['price'].toString(),
-                                  style: TextStyle(
-                                    decoration: TextDecoration.lineThrough,
+                                  Text(
+                                    formatCurrency
+                                            .format(widget.snap['price'])
+                                            .toString() +
+                                        'VND',
+                                    style: TextStyle(
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
                                   ),
+                                ],
+                              )
+                            : Text(
+                                formatCurrency
+                                        .format(widget.snap['price'])
+                                        .toString() +
+                                    'VND',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                              ],
-                            )
-                          : Text(
-                              widget.snap['price'].toString(),
+                              ),
+                        Row(
+                          children: [
+                            IconButton(
+                              onPressed: () => _updateQuantity(-1),
+                              icon: Icon(Icons.remove, size: 20),
+                            ),
+                            Text(
+                              '$_quantity',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: () => _updateQuantity(-1),
-                            icon: Icon(Icons.remove, size: 20),
-                          ),
-                          Text(
-                            '$_quantity',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
+                            IconButton(
+                              onPressed: () => _updateQuantity(1),
+                              icon: Icon(Icons.add, size: 20),
                             ),
-                          ),
-                          IconButton(
-                            onPressed: () => _updateQuantity(1),
-                            icon: Icon(Icons.add, size: 20),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            top: 12,
+            right: 12,
+            child: CircleAvatar(
+              radius: 18,
+              backgroundColor: Colors.white,
+              child: IconButton(
+                onPressed: () {
+                  if (_isFavorite) {
+                    removeFromFavourites(); // Xóa khỏi yêu thích
+                  } else {
+                    addToFavourites(); // Thêm vào yêu thích
+                  }
+                },
+                icon: Icon(
+                  _isFavorite ? Icons.favorite : Icons.favorite_outline,
+                  size: 20,
+                  color: _isFavorite ? Colors.red : Colors.black,
                 ),
-              ],
-            ),
-          ),
-        ),
-        Positioned(
-          top: 12,
-          right: 12,
-          child: CircleAvatar(
-            radius: 18,
-            backgroundColor: Colors.white,
-            child: IconButton(
-              onPressed: () { if (_isFavorite) {
-                      removeFromFavourites(); // Xóa khỏi yêu thích
-                    } else {
-                      addToFavourites(); // Thêm vào yêu thích
-                    }},
-              icon: Icon(
-                _isFavorite ? Icons.favorite : Icons.favorite_outline,
-                size: 20,
-                color: _isFavorite ? Colors.red : Colors.black,
               ),
             ),
           ),
-        ),
-        Positioned(
-          bottom: 12,
-          right: 12,
-          child: CircleAvatar(
-            radius: 18,
-            backgroundColor: Colors.white,
-            child: IconButton(
-              onPressed: () {if (_isInCart) {
-                      removeFromCart(); // Xóa khỏi giỏ hàng
-                    } else {
-                      addToCart(); // Thêm vào giỏ hàng
-                    }},
-              icon: Icon(
-                _isInCart ? Icons.shopping_cart : Icons.shopping_cart_outlined,
-                size: 20,
-                color: _isInCart ? Colors.red : Colors.black,
+          Positioned(
+            bottom: 12,
+            right: 12,
+            child: CircleAvatar(
+              radius: 18,
+              backgroundColor: Colors.white,
+              child: IconButton(
+                onPressed: () {
+                  if (_isInCart) {
+                    removeFromCart(); // Xóa khỏi giỏ hàng
+                  } else {
+                    addToCart(); // Thêm vào giỏ hàng
+                  }
+                },
+                icon: Icon(
+                  _isInCart ? Icons.shopping_cart : Icons.shopping_cart_outlined,
+                  size: 20,
+                  color: _isInCart ? Colors.red : Colors.black,
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

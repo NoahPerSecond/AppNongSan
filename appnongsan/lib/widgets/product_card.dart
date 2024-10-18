@@ -1,6 +1,8 @@
+import 'package:appnongsan/screens/product_detail_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class ProductCard extends StatefulWidget {
   final snap;
@@ -15,7 +17,7 @@ class ProductCard extends StatefulWidget {
 class _ProductCardState extends State<ProductCard> {
   bool _isFavorite = false;
   bool _isInCart = false;
-
+  final formatCurrency = NumberFormat.currency(locale: 'vi_VN', symbol: '');
   @override
   void initState() {
     super.initState();
@@ -153,131 +155,155 @@ class _ProductCardState extends State<ProductCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Padding(
-          padding: EdgeInsets.only(left: 8),
-          child: Container(
-            width: 160,
-            decoration: BoxDecoration(
-                border: Border.all(width: 0.3),
-                borderRadius: BorderRadius.circular(20)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20)),
-                  child: Image(
-                    width: 160,
-                    height: 120,
-                    fit: BoxFit.cover,
-                    image: NetworkImage(
-                      widget.snap['imageUrl'].toString(),
+    return InkWell(
+      onTap: () =>Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => ProductDetailScreen(productId: widget.productId!,)),
+                  ),
+      child: Stack(
+        children: [
+          Padding(
+            padding: EdgeInsets.only(left: 8),
+            child: Container(
+              width: 160,
+              decoration: BoxDecoration(
+                  border: Border.all(width: 0.3),
+                  borderRadius: BorderRadius.circular(20)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20)),
+                    child: Image(
+                      width: 160,
+                      height: 120,
+                      fit: BoxFit.cover,
+                      image: NetworkImage(
+                        widget.snap['imageUrl'].toString(),
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        overflow: TextOverflow.ellipsis,
-                        widget.snap['name'],
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
-                      Row(
-                        children: List.generate(5, (index) {
-                          return Icon(
-                            size: 15,
-                            Icons.star,
-                            color: index < widget.snap['rating']
-                                ? Colors.yellow
-                                : Colors.grey,
-                          );
-                        }),
-                      ),
-                      (widget.snap['isSale'])
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          overflow: TextOverflow.ellipsis,
+                          widget.snap['name'],
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w500),
+                        ),
+                        Row(
+                          children: List.generate(5, (index) {
+                            return Icon(
+                              size: 15,
+                              Icons.star,
+                              color: index < widget.snap['rating']
+                                  ? Colors.yellow
+                                  : Colors.grey,
+                            );
+                          }),
+                        ),
+                        (widget.snap['isSale'])
                           ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  widget.snap['newPrice'].toString(),
+                                  formatCurrency
+                                          .format(widget.snap['newPrice'])
+                                          .toString() +
+                                      'VND',
                                   style: TextStyle(
-                                      color: Colors.green,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500),
+                                    color: Colors.green,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                                 Text(
-                                  widget.snap['price'].toString(),
+                                  formatCurrency
+                                          .format(widget.snap['price'])
+                                          .toString() +
+                                      'VND',
                                   style: TextStyle(
-                                      decoration: TextDecoration.lineThrough),
-                                )
+                                    decoration: TextDecoration.lineThrough,
+                                  ),
+                                ),
                               ],
                             )
-                          : Column(
-                              children: [
-                                SizedBox(
-                                  height: 22,
-                                ),
-                                Text(widget.snap['price'].toString()),
-                              ],
+                          : Text(
+                              formatCurrency
+                                      .format(widget.snap['price'])
+                                      .toString() +
+                                  'VND',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                    ],
+                            // : Column(
+                            //     children: [
+                            //       SizedBox(
+                            //         height: 22,
+                            //       ),
+                            //       Text(widget.snap['price'].toString()),
+                            //     ],
+                            //   ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-        Positioned(
-            top: 6,
-            right: 6,
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: Colors.white,
-              child: IconButton(
-                  onPressed: () {
-                    if (_isFavorite) {
-                      removeFromFavourites(); // Xóa khỏi yêu thích
-                    } else {
-                      addToFavourites(); // Thêm vào yêu thích
-                    }
-                  },
-                  icon: Icon(
-                    _isFavorite
-                        ? Icons.favorite // Icon đỏ nếu đã yêu thích
-                        : Icons.favorite_outline, // Outline nếu chưa yêu thích
-                    size: 20,
-                    color: _isFavorite
-                        ? Colors.red
-                        : Colors.black, // Đổi màu theo trạng thái
-                  )),
-            )),
-        Positioned(
-            top: 80,
-            right: 6,
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: Colors.white,
-              child: IconButton(
-                  onPressed: () {
-                    if (_isInCart) {
-                      removeFromCart(); // Xóa khỏi giỏ hàng
-                    } else {
-                      addToCart(); // Thêm vào giỏ hàng
-                    }
-                  },
-                  icon: Icon(
-                    _isInCart ? Icons.shopping_cart : Icons.shopping_cart_outlined,
-                    size: 20,
-                    color: _isInCart ? Colors.red : Colors.black,
-                  )),
-            )),
-      ],
+          Positioned(
+              top: 6,
+              right: 6,
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: Colors.white,
+                child: IconButton(
+                    onPressed: () {
+                      if (_isFavorite) {
+                        removeFromFavourites(); // Xóa khỏi yêu thích
+                      } else {
+                        addToFavourites(); // Thêm vào yêu thích
+                      }
+                    },
+                    icon: Icon(
+                      _isFavorite
+                          ? Icons.favorite // Icon đỏ nếu đã yêu thích
+                          : Icons.favorite_outline, // Outline nếu chưa yêu thích
+                      size: 20,
+                      color: _isFavorite
+                          ? Colors.red
+                          : Colors.black, // Đổi màu theo trạng thái
+                    )),
+              )),
+          Positioned(
+              top: 80,
+              right: 6,
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: Colors.white,
+                child: IconButton(
+                    onPressed: () {
+                      if (_isInCart) {
+                        removeFromCart(); // Xóa khỏi giỏ hàng
+                      } else {
+                        addToCart(); // Thêm vào giỏ hàng
+                      }
+                    },
+                    icon: Icon(
+                      _isInCart ? Icons.shopping_cart : Icons.shopping_cart_outlined,
+                      size: 20,
+                      color: _isInCart ? Colors.red : Colors.black,
+                    )),
+              )),
+        ],
+      ),
     );
   }
 }
