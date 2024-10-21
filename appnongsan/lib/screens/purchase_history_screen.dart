@@ -46,7 +46,7 @@ class PurchaseHistoryPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Tên sản phẩm: ${orderData['productId'] ?? 'N/A'}",
+                        "Tên sản phẩm: ${orderData['productName'] ?? 'N/A'}",
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 5),

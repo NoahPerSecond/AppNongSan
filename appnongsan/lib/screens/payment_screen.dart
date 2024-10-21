@@ -14,6 +14,7 @@ class PaymentPage extends StatefulWidget {
 class _PaymentPageState extends State<PaymentPage> {
   int quantity = 1; // Default quantity
   late double price; // To hold the product price
+  String productName = '';
 
   late TextEditingController recipientNameController;
   late TextEditingController recipientAddressController;
@@ -50,33 +51,83 @@ class _PaymentPageState extends State<PaymentPage> {
       });
     }
   }
+//   void saveOrder() async {
+//   String userId = FirebaseAuth.instance.currentUser!.uid;
+
+//   // Get a reference to the product document
+//   DocumentReference productRef = FirebaseFirestore.instance.collection('product').doc(widget.productId);
+
+//   FirebaseFirestore.instance.runTransaction((transaction) async {
+//     // Get the current stock of the product
+//     DocumentSnapshot productSnapshot = await transaction.get(productRef);
+
+//     if (!productSnapshot.exists) {
+//       throw Exception("Sản phẩm không tồn tại.");
+//     }
+
+//     int currentStock = productSnapshot['stockQuantity'];
+//     int newStock = currentStock - quantity;
+
+//     if (newStock < 0) {
+//       throw Exception("Số lượng sản phẩm không đủ.");
+//     }
+
+//     // Update the product's stock quantity
+//     transaction.update(productRef, {'stockQuantity': newStock});
+
+//     // Create an order document
+//     await FirebaseFirestore.instance.collection('orders').add({
+//       'productId': widget.productId,
+//       'userId': userId,
+//       'recipientName': recipientNameController.text,
+//       'recipientAddress': recipientAddressController.text,
+//       'recipientPhoneNum': recipientPhoneNumController.text,
+//       'quantity': quantity,
+//       'totalAmount': price * quantity,
+//       'orderStatus': 'Đang chờ xử lý', // Add order status
+//       'timestamp': FieldValue.serverTimestamp(), // Add a timestamp
+//     });
+
+//     // Show success message
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       const SnackBar(content: Text("Đặt hàng thành công!")),
+//     );
+//     Navigator.pop(context); // Go back to the previous screen
+//   }).catchError((error) {
+//     // Handle any errors
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(content: Text("Lỗi: $error")),
+//     );
+//   });
+// }
+
 
   void saveOrder() async {
     String userId = FirebaseAuth.instance.currentUser!.uid;
 
-    // Create an order document
+    // Tạo một tài liệu đơn hàng
     await FirebaseFirestore.instance.collection('orders').add({
       'productId': widget.productId,
+      'productName': productName, // Thêm tên sản phẩm vào đơn hàng
       'userId': userId,
       'recipientName': recipientNameController.text,
       'recipientAddress': recipientAddressController.text,
       'recipientPhoneNum': recipientPhoneNumController.text,
       'quantity': quantity,
       'totalAmount': price * quantity,
-      'orderStatus': 'Đang chờ xử lý', // Add order status
-      'timestamp': FieldValue.serverTimestamp(), // Add a timestamp
+      'orderStatus': 'Đang chờ xử lý', // Trạng thái đơn hàng
+      'timestamp': FieldValue.serverTimestamp(), // Thêm thời gian
     }).then((value) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Đặt hàng thành công!")),
       );
-      Navigator.pop(context); // Go back to the previous screen
+      Navigator.pop(context); // Quay lại màn hình trước
     }).catchError((error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Lỗi: $error")),
       );
     });
-}
-
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,7 +158,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
               final productData = snapshot.data!.data() as Map<String, dynamic>;
               price = productData['price']?.toDouble() ?? 0.0;
-
+               productName = productData['name'] ?? 'N/A'; // Lưu tên sản phẩm
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
