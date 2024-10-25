@@ -1,3 +1,4 @@
+import 'package:appnongsan/screens/notification.dart';
 import 'package:appnongsan/utils/utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,13 @@ class MobileScreenLayout extends StatefulWidget {
 class _MobileScreenLayoutState extends State<MobileScreenLayout> {
   late PageController pageController;
   int page = 0;
+  int notificationCount = 0;
+
+  void incrementNotificationCount() {
+  setState(() {
+    notificationCount++;
+  });
+}
 
   void onPageChange(int pageNum) {
     setState(() {
@@ -40,80 +48,82 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
 
   @override
   Widget build(BuildContext context) {
-    final GlobalKey<ScaffoldState> scaffoldKey = GlobalKeyManager().getScaffoldKey;
+    final GlobalKey<ScaffoldState> scaffoldKey =
+        GlobalKeyManager().getScaffoldKey;
     return Scaffold(
       key: scaffoldKey,
-      drawer: Drawer(
-        backgroundColor: Colors.white,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.green, // Màu nền cho DrawerHeader
-              ),
-              child: Text(
-                'Menu',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
-              ),
-            ),
-            Column(
-              children: [
-                _createDrawerItem(
-                  icon: Icons.home,
-                  text: 'Trang chủ',
-                  onTap: () {
-                    Navigator.pop(context); // Đóng drawer khi chọn
-                  },
-                ),
-                _customDivider(),
-                _createDrawerItem(
-                  icon: Icons.category,
-                  text: 'Danh mục',
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                _customDivider(),
-                _createDrawerItem(
-                  icon: Icons.shopping_cart,
-                  text: 'Sản phẩm',
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                _customDivider(),
-                _createDrawerItem(
-                  icon: Icons.favorite,
-                  text: 'Yêu thích',
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                _customDivider(),
-                _createDrawerItem(
-                  icon: Icons.notifications,
-                  text: 'Thông báo',
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                _customDivider(),
-                _createDrawerItem(
-                  icon: Icons.settings,
-                  text: 'Cài đặt',
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+      // drawer: Drawer(
+      //   backgroundColor: Colors.white,
+      //   child: ListView(
+      //     padding: EdgeInsets.zero,
+      //     children: <Widget>[
+      //       DrawerHeader(
+      //         decoration: BoxDecoration(
+      //           color: Colors.green, // Màu nền cho DrawerHeader
+      //         ),
+      //         child: Text(
+      //           'Menu',
+      //           style: TextStyle(
+      //             color: Colors.white,
+      //             fontSize: 24,
+      //           ),
+      //         ),
+      //       ),
+      //       Column(
+      //         children: [
+      //           _createDrawerItem(
+      //             icon: Icons.home,
+      //             text: 'Trang chủ',
+      //             onTap: () {
+      //               Navigator.pop(context); // Đóng drawer khi chọn
+      //             },
+      //           ),
+      //           _customDivider(),
+      //           _createDrawerItem(
+      //             icon: Icons.category,
+      //             text: 'Danh mục',
+      //             onTap: () {
+      //               Navigator.pop(context);
+      //             },
+      //           ),
+      //           _customDivider(),
+      //           _createDrawerItem(
+      //             icon: Icons.shopping_cart,
+      //             text: 'Sản phẩm',
+      //             onTap: () {
+      //               Navigator.pop(context);
+      //             },
+      //           ),
+      //           _customDivider(),
+      //           _createDrawerItem(
+      //             icon: Icons.favorite,
+      //             text: 'Yêu thích',
+      //             onTap: () {
+      //               Navigator.pop(context);
+      //             },
+      //           ),
+      //           _customDivider(),
+      //           _createDrawerItem(
+      //             icon: Icons.notifications,
+      //             text: 'Thông báo',
+      //             onTap: () {
+      //               Navigator.of(context).push(MaterialPageRoute(
+      //                   builder: (context) => NotificationForm()));
+      //             },
+      //           ),
+      //           _customDivider(),
+      //           _createDrawerItem(
+      //             icon: Icons.settings,
+      //             text: 'Cài đặt',
+      //             onTap: () {
+      //               Navigator.pop(context);
+      //             },
+      //           ),
+      //         ],
+      //       ),
+      //     ],
+      //   ),
+      // ),
       body: PageView(
         onPageChanged: onPageChange,
         controller: pageController,
@@ -132,7 +142,9 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
                 page == 0 ? Icons.home : Icons.home_outlined,
                 key: ValueKey(page == 0),
                 size: page == 0 ? 28 : 24,
-                color: page == 0 ? Colors.white : Colors.white70, // Cùng một màu với các mục khác
+                color: page == 0
+                    ? Colors.white
+                    : Colors.white70, // Cùng một màu với các mục khác
               ),
             ),
             label: 'Trang chủ',
@@ -162,13 +174,51 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
             label: 'Yêu thích',
           ),
           BottomNavigationBarItem(
+            icon: Stack(
+              children: [
+                AnimatedSwitcher(
+                  duration: Duration(milliseconds: 300),
+                  child: Icon(
+                    page == 3 ? Icons.notifications : Icons.notifications_none,
+                    key: ValueKey(page == 3),
+                    size: 28,
+                    color: page == 3 ? Colors.white : Colors.white70,
+                  ),
+                ),
+                if (notificationCount >
+                    0) // Show badge if there are notifications
+                  Positioned(
+                    right: 0,
+                    child: Container(
+                      padding: EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: BoxConstraints(
+                        maxWidth: 20,
+                        maxHeight: 20,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$notificationCount',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            label: 'Thông báo',
+          ),
+          BottomNavigationBarItem(
             icon: AnimatedSwitcher(
               duration: Duration(milliseconds: 300),
               child: Icon(
-                page == 3 ? Icons.person : Icons.person_outline,
-                key: ValueKey(page == 3),
-                size: page == 3 ? 28 : 24,
-                color: page == 3 ? Colors.white : Colors.white70,
+                page == 4 ? Icons.person : Icons.person_outline,
+                key: ValueKey(page == 4),
+                size: page == 4 ? 28 : 24,
+                color: page == 4 ? Colors.white : Colors.white70,
               ),
             ),
             label: 'Tài khoản',
@@ -179,23 +229,26 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
   }
 }
 
-Widget _createDrawerItem({required IconData icon, required String text, required VoidCallback onTap}) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.green),
-      title: Text(
-        text,
-        style: TextStyle(color: Colors.black),
-      ),
-      onTap: onTap,
-    );
-  }
+// Widget _createDrawerItem(
+//     {required IconData icon,
+//     required String text,
+//     required VoidCallback onTap}) {
+//   return ListTile(
+//     leading: Icon(icon, color: Colors.green),
+//     title: Text(
+//       text,
+//       style: TextStyle(color: Colors.black),
+//     ),
+//     onTap: onTap,
+//   );
+// }
 
-    Widget _customDivider() {
-    return Divider(
-      color: Colors.black,
-      thickness: 0.4,
-      height: 1, // Chiều cao của divider, ảnh hưởng đến khoảng cách giữa các item
-      // indent: 16, // Khoảng cách từ đầu danh sách
-      // endIndent: 16, // Khoảng cách từ cuối danh sách
-    );
-  }
+// Widget _customDivider() {
+//   return Divider(
+//     color: Colors.black,
+//     thickness: 0.4,
+//     height: 1, // Chiều cao của divider, ảnh hưởng đến khoảng cách giữa các item
+//     // indent: 16, // Khoảng cách từ đầu danh sách
+//     // endIndent: 16, // Khoảng cách từ cuối danh sách
+//   );
+// }

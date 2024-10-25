@@ -27,27 +27,31 @@ class ProductScreen extends StatelessWidget {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.only(top: 10.0),
-        child: Container(
-          height: 230,
-          child: StreamBuilder(
-              stream:
-                  FirebaseFirestore.instance.collection('product').snapshots(),
-              builder: (context,
-                  AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-                return ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: snapshot.data!.docs.length,
-                    itemBuilder: (context, index) => ProductCard(
-                          snap: snapshot.data!.docs[index].data(),
-                          productId: snapshot.data!.docs[index].id,
-                        ));
-              }),
+        padding: const EdgeInsets.all(0), // Adjust the overall padding
+        child: StreamBuilder(
+          stream: FirebaseFirestore.instance.collection('product').snapshots(),
+          builder: (context,
+              AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            return GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2, // 2 cards per row
+                childAspectRatio: 0.75, // Adjust this value for height/width ratio
+                crossAxisSpacing: 8.0, // Space between cards horizontally
+                mainAxisSpacing: 8.0, // Space between cards vertically
+              ),
+              itemCount: snapshot.data!.docs.length,
+              itemBuilder: (context, index) => ProductCard(
+                snap: snapshot.data!.docs[index].data(),
+                productId: snapshot.data!.docs[index].id,
+              ),
+            );
+          },
         ),
       ),
     );

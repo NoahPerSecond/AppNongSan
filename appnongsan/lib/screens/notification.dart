@@ -1,3 +1,5 @@
+import 'package:appnongsan/screens/home_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class NotificationForm extends StatefulWidget {
@@ -18,10 +20,12 @@ class _NotificationFormState extends State<NotificationForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        // leading: IconButton(
+        //   icon: Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+        //   onPressed: () {
+        //     Navigator.pop(context);
+        //   },
+        // ),
         title: Text(
           'Thông báo',
           style: TextStyle(fontSize: 20, color: Colors.white),
@@ -36,7 +40,8 @@ class _NotificationFormState extends State<NotificationForm> {
             margin: EdgeInsets.all(10),
             height: 50, // Chiều cao cho TabBar
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(30), // Bo tròn để tạo hình oval
+              borderRadius:
+                  BorderRadius.circular(30), // Bo tròn để tạo hình oval
               border: Border.all(color: Colors.green),
             ),
             child: Row(
@@ -48,14 +53,19 @@ class _NotificationFormState extends State<NotificationForm> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: _selectedIndex == 0 ? Colors.green : Colors.transparent,
-                        borderRadius: BorderRadius.horizontal(right: Radius.circular(30), left: Radius.circular(30)),
+                        color: _selectedIndex == 0
+                            ? Colors.green
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.horizontal(
+                            right: Radius.circular(30),
+                            left: Radius.circular(30)),
                       ),
                       alignment: Alignment.center,
                       child: Text(
                         'Sản phẩm',
                         style: TextStyle(
-                          color: _selectedIndex == 0 ? Colors.white : Colors.black,
+                          color:
+                              _selectedIndex == 0 ? Colors.white : Colors.black,
                         ),
                       ),
                     ),
@@ -68,14 +78,19 @@ class _NotificationFormState extends State<NotificationForm> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: _selectedIndex == 1 ? Colors.green : Colors.transparent,
-                        borderRadius: BorderRadius.horizontal(right: Radius.circular(30), left: Radius.circular(30)),
+                        color: _selectedIndex == 1
+                            ? Colors.green
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.horizontal(
+                            right: Radius.circular(30),
+                            left: Radius.circular(30)),
                       ),
                       alignment: Alignment.center,
                       child: Text(
                         'Khuyến mãi',
                         style: TextStyle(
-                          color: _selectedIndex == 1 ? Colors.white : Colors.black,
+                          color:
+                              _selectedIndex == 1 ? Colors.white : Colors.black,
                         ),
                       ),
                     ),
@@ -94,64 +109,95 @@ class _NotificationFormState extends State<NotificationForm> {
 }
 
 class NotificationList extends StatelessWidget {
-  final List<Map<String, String>> notifications = [
-    {'order': '13452378PO', 'message': 'của bạn đã giao cho đơn vị vận chuyển nhấn để xem chi tiết', 'date': '15:30 06/09/2021'},
-    {'order': '13452379PO', 'message': 'của bạn đã giao cho đơn vị vận chuyển nhấn để xem chi tiết', 'date': '15:05 09/12/2021'},
-    {'order': '13452378PO', 'message': 'của bạn đã giao cho đơn vị vận chuyển nhấn để xem chi tiết', 'date': '15:30 06/09/2021'},
-    {'order': '13452379PO', 'message': 'của bạn đã giao cho đơn vị vận chuyển nhấn để xem chi tiết', 'date': '15:05 09/12/2021'},
-    {'order': '13452378PO', 'message': 'của bạn đã giao cho đơn vị vận chuyển nhấn để xem chi tiết', 'date': '15:30 06/09/2021'},
-    {'order': '13452379PO', 'message': 'của bạn đã giao cho đơn vị vận chuyển nhấn để xem chi tiết', 'date': '15:05 09/12/2021'},
-    {'order': '13452378PO', 'message': 'của bạn đã giao cho đơn vị vận chuyển nhấn để xem chi tiết', 'date': '15:30 06/09/2021'},
-  ];
-
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: notifications.length,
-      itemBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'Đơn hàng ',
-                      style: TextStyle(color: Colors.black),
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('orders').snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Lỗi: ${snapshot.error}'));
+        }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Center(child: Text('Chưa có thông báo đơn hàng.'));
+        }
+
+        final orders = snapshot.data!.docs;
+
+        return ListView.builder(
+          itemCount: orders.length,
+          itemBuilder: (context, index) {
+            final orderData = orders[index].data() as Map<String, dynamic>;
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        const TextSpan(
+                          text: 'Đơn hàng ',
+                          style: TextStyle(color: Colors.black),
+                        ),
+                        TextSpan(
+                          text: orderData['productName'] ?? 'N/A',
+                          style: TextStyle(
+                              color: Colors.green, fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(
+                          text:
+                              ' ${_getOrderStatusMessage(orderData['orderStatus'])}',
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                      ],
                     ),
-                    TextSpan(
-                      text: notifications[index]['order']!,
-                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
-                    ),
-                    TextSpan(
-                      text: ' ${notifications[index]['message']}',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(orderData['timestamp']?.toDate().toString() ?? '',
+                      style: TextStyle(color: Colors.grey)),
+                  const Divider(),
+                ],
               ),
-              SizedBox(height: 5),
-              Text(notifications[index]['date']!, style: TextStyle(color: Colors.grey)),
-              Divider(),
-            ],
-          ),
+            );
+          },
         );
       },
     );
+  }
+
+  String _getOrderStatusMessage(String? status) {
+    switch (status) {
+      case 'Chờ xác nhận':
+        return 'đang chờ xác nhận.';
+      case 'Đang giao':
+        return 'đang được giao.';
+      case 'Hoàn thành':
+        return 'đã hoàn thành.';
+      case 'Đã hủy':
+        return 'đã bị hủy.';
+      default:
+        return 'cập nhật.';
+    }
   }
 }
 
 class PromotionList extends StatelessWidget {
   final List<Map<String, String>> promotions = [
-    {'title': 'Đừng bỏ lỡ nông sản mùa hè cực hot.', 'message': 'Hàng mới về. Click để xem ngay.', 'time': '15:30 06/09/2021'},
-    {'title': 'Đừng bỏ lỡ nông sản mùa hè cực hot.', 'message': 'Hàng mới về. Click để xem ngay.', 'time': '15:30 06/09/2021'},
-    {'title': 'Đừng bỏ lỡ nông sản mùa hè cực hot.', 'message': 'Hàng mới về. Click để xem ngay.', 'time': '15:30 06/09/2021'},
-    {'title': 'Đừng bỏ lỡ nông sản mùa hè cực hot.', 'message': 'Hàng mới về. Click để xem ngay.', 'time': '15:30 06/09/2021'},
-    {'title': 'Đừng bỏ lỡ nông sản mùa hè cực hot.', 'message': 'Hàng mới về. Click để xem ngay.', 'time': '15:30 06/09/2021'},
-    {'title': 'Đừng bỏ lỡ nông sản mùa hè cực hot.', 'message': 'Hàng mới về. Click để xem ngay.', 'time': '15:30 06/09/2021'},
-    {'title': 'Đừng bỏ lỡ nông sản mùa hè cực hot.', 'message': 'Hàng mới về. Click để xem ngay.', 'time': '15:30 06/09/2021'},
+    {
+      'title': 'Đừng bỏ lỡ nông sản mùa hè cực hot.',
+      'message': 'Hàng mới về. Click để xem ngay.',
+      'time': '15:30 06/09/2021'
+    },
+    {
+      'title': 'Đừng bỏ lỡ nông sản mùa hè cực hot.',
+      'message': 'Hàng mới về. Click để xem ngay.',
+      'time': '15:30 06/09/2021'
+    },
+    // More promotion data here
   ];
 
   @override
@@ -166,7 +212,8 @@ class PromotionList extends StatelessWidget {
             children: [
               Text(
                 promotions[index]['title']!,
-                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
               ),
               Text(
                 promotions[index]['message']!,

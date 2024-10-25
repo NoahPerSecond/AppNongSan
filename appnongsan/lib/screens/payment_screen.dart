@@ -115,7 +115,7 @@ class _PaymentPageState extends State<PaymentPage> {
       'recipientPhoneNum': recipientPhoneNumController.text,
       'quantity': quantity,
       'totalAmount': price * quantity,
-      'orderStatus': 'Đang chờ xử lý', // Trạng thái đơn hàng
+      'orderStatus': 'Chờ xác nhận', // Trạng thái đơn hàng
       'timestamp': FieldValue.serverTimestamp(), // Thêm thời gian
     }).then((value) {
       ScaffoldMessenger.of(context).showSnackBar(

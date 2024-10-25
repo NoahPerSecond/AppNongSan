@@ -1,6 +1,7 @@
 import 'package:appnongsan/screens/account.dart';
 import 'package:appnongsan/screens/favourite_screen.dart';
 import 'package:appnongsan/screens/home_screen.dart';
+import 'package:appnongsan/screens/notification.dart';
 
 import 'package:appnongsan/screens/product_screen.dart';
 import 'package:appnongsan/screens/profile_screen.dart';
@@ -10,6 +11,7 @@ List<Widget> homeScreenItems = [
   HomeScreen(),
   ProductScreen(),
   FavouriteScreen(),
+  NotificationForm(),
   ProfilePage()
 
 ];

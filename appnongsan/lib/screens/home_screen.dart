@@ -18,31 +18,30 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _cartItemCount = 0;
   Future<int> getCartItemCount() async {
-  User? user = FirebaseAuth.instance.currentUser;
-  int totalQuantity = 0;
-  int countItem = 0;
-  if (user != null) {
-    try {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
+    User? user = FirebaseAuth.instance.currentUser;
+    int totalQuantity = 0;
+    int countItem = 0;
+    if (user != null) {
+      try {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
 
-      // Access the 'cart' array
-      List<dynamic> cartItems = userDoc['cart'] ?? [];
-      countItem = cartItems.length;
-      // Sum the quantities
-      for (var item in cartItems) {
-        totalQuantity += (item['quantity'] as int);
+        // Access the 'cart' array
+        List<dynamic> cartItems = userDoc['cart'] ?? [];
+        countItem = cartItems.length;
+        // Sum the quantities
+        for (var item in cartItems) {
+          totalQuantity += (item['quantity'] as int);
+        }
+      } catch (e) {
+        print('Error getting cart quantity: $e');
       }
-    } catch (e) {
-      print('Error getting cart quantity: $e');
     }
+
+    return countItem;
   }
-
-  return countItem;
-}
-
 
   Future<void> _loadCartItemCount() async {
     int itemCount = await getCartItemCount();
@@ -52,28 +51,31 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void listenToCartChanges() {
-  User? user = FirebaseAuth.instance.currentUser;
-  int countItem = 0;
-  FirebaseFirestore.instance
-      .collection('users')
-      .doc(user!.uid)
-      .snapshots()
-      .listen((DocumentSnapshot snapshot) {
-        if (snapshot.exists) {
-          int totalQuantity = 0;
-          List<dynamic> cartItems = snapshot['cart'] ?? [];
-          countItem = cartItems.length;
-          // for (var item in cartItems) {
-          //   totalQuantity += (item['quantity'] as int);
-          // }
+    User? user = FirebaseAuth.instance.currentUser;
+    int countItem = 0;
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .snapshots()
+        .listen((DocumentSnapshot snapshot) {
+      if (snapshot.exists) {
+        int totalQuantity = 0;
+        List<dynamic> cartItems = snapshot['cart'] ?? [];
+        countItem = cartItems.length;
+        // for (var item in cartItems) {
+        //   totalQuantity += (item['quantity'] as int);
+        // }
 
-          setState(() {
-            _cartItemCount = countItem;
-          });
-        }
-      });
-}
-
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              _cartItemCount = countItem;
+            });
+          }
+        });
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -111,8 +113,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
-    
-
     final GlobalKey<ScaffoldState> scaffoldKey =
         GlobalKeyManager().getScaffoldKey;
 
@@ -123,13 +123,13 @@ class _HomeScreenState extends State<HomeScreen> {
             bottom: Radius.circular(40), // Độ cong của góc dưới AppBar
           ),
         ),
-        leading: IconButton(
-            onPressed: () => scaffoldKey.currentState!.openDrawer(),
-            icon: Icon(
-              Icons.menu,
-              color: Colors.white,
-              size: 40,
-            )),
+        // leading: IconButton(
+        //     onPressed: () => scaffoldKey.currentState!.openDrawer(),
+        //     icon: Icon(
+        //       Icons.menu,
+        //       color: Colors.white,
+        //       size: 40,
+        //     )),
         title: Text(
           'LOGO',
           style: TextStyle(

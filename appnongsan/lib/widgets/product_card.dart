@@ -156,58 +156,59 @@ class _ProductCardState extends State<ProductCard> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () =>Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => ProductDetailScreen(productId: widget.productId!,)),
-                  ),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+            builder: (context) => ProductDetailScreen(
+                  productId: widget.productId!,
+                )),
+      ),
       child: Stack(
         children: [
-          Padding(
-            padding: EdgeInsets.only(left: 8),
-            child: Container(
-              width: 160,
-              decoration: BoxDecoration(
-                  border: Border.all(width: 0.3),
-                  borderRadius: BorderRadius.circular(20)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20)),
-                    child: Image(
-                      width: 160,
-                      height: 120,
-                      fit: BoxFit.cover,
-                      image: NetworkImage(
-                        widget.snap['imageUrl'].toString(),
-                      ),
+          Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20)),
+                  child: Image(
+                    width: 180,
+                    height: 110,
+                    fit: BoxFit.cover,
+                    image: NetworkImage(
+                      widget.snap['imageUrl'].toString(),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          overflow: TextOverflow.ellipsis,
-                          widget.snap['name'],
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w500),
-                        ),
-                        Row(
-                          children: List.generate(5, (index) {
-                            return Icon(
-                              size: 15,
-                              Icons.star,
-                              color: index < widget.snap['rating']
-                                  ? Colors.yellow
-                                  : Colors.grey,
-                            );
-                          }),
-                        ),
-                        (widget.snap['isSale'])
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        overflow: TextOverflow.ellipsis,
+                        widget.snap['name'],
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w500),
+                      ),
+                      Row(
+                        children: List.generate(5, (index) {
+                          return Icon(
+                            size: 15,
+                            Icons.star,
+                            color: index < widget.snap['rating']
+                                ? Colors.yellow
+                                : Colors.grey,
+                          );
+                        }),
+                      ),
+                      (widget.snap['isSale'])
                           ? Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -243,19 +244,18 @@ class _ProductCardState extends State<ProductCard> {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            // : Column(
-                            //     children: [
-                            //       SizedBox(
-                            //         height: 22,
-                            //       ),
-                            //       Text(widget.snap['price'].toString()),
-                            //     ],
-                            //   ),
-                      ],
-                    ),
+                      // : Column(
+                      //     children: [
+                      //       SizedBox(
+                      //         height: 22,
+                      //       ),
+                      //       Text(widget.snap['price'].toString()),
+                      //     ],
+                      //   ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           Positioned(
@@ -275,7 +275,8 @@ class _ProductCardState extends State<ProductCard> {
                     icon: Icon(
                       _isFavorite
                           ? Icons.favorite // Icon đỏ nếu đã yêu thích
-                          : Icons.favorite_outline, // Outline nếu chưa yêu thích
+                          : Icons
+                              .favorite_outline, // Outline nếu chưa yêu thích
                       size: 20,
                       color: _isFavorite
                           ? Colors.red
@@ -283,7 +284,7 @@ class _ProductCardState extends State<ProductCard> {
                     )),
               )),
           Positioned(
-              top: 80,
+              top: 60,
               right: 6,
               child: CircleAvatar(
                 radius: 18,
@@ -297,7 +298,9 @@ class _ProductCardState extends State<ProductCard> {
                       }
                     },
                     icon: Icon(
-                      _isInCart ? Icons.shopping_cart : Icons.shopping_cart_outlined,
+                      _isInCart
+                          ? Icons.shopping_cart
+                          : Icons.shopping_cart_outlined,
                       size: 20,
                       color: _isInCart ? Colors.red : Colors.black,
                     )),
