@@ -1,6 +1,8 @@
 import 'package:appnongsan/screens/home_screen.dart';
+import 'package:appnongsan/screens/product_detail_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class NotificationForm extends StatefulWidget {
   @override
@@ -186,49 +188,70 @@ class NotificationList extends StatelessWidget {
 }
 
 class PromotionList extends StatelessWidget {
-  final List<Map<String, String>> promotions = [
-    {
-      'title': 'Đừng bỏ lỡ nông sản mùa hè cực hot.',
-      'message': 'Hàng mới về. Click để xem ngay.',
-      'time': '15:30 06/09/2021'
-    },
-    {
-      'title': 'Đừng bỏ lỡ nông sản mùa hè cực hot.',
-      'message': 'Hàng mới về. Click để xem ngay.',
-      'time': '15:30 06/09/2021'
-    },
-    // More promotion data here
-  ];
-
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: promotions.length,
-      itemBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                promotions[index]['title']!,
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('product')
+          .where('newPrice', isGreaterThan: 0) // Lọc các sản phẩm có newPrice
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Lỗi: ${snapshot.error}'));
+        }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Center(child: Text('Không có sản phẩm khuyến mãi.'));
+        }
+
+        final promotions = snapshot.data!.docs;
+
+        return ListView.builder(
+          itemCount: promotions.length,
+          itemBuilder: (context, index) {
+            final productData = promotions[index].data() as Map<String, dynamic>;
+
+            return InkWell(
+              onTap:()=> Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ProductDetailScreen(productId: productData['id']),
+                      ),
+                    ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      productData['name'] ?? 'Tên sản phẩm',
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                    ),
+                    Text(
+                      'Giá mới: ${productData['newPrice'] != null ? formatCurrency.format(productData['newPrice']) + ' VND' : 'N/A'}',
+                      style: TextStyle(color: Colors.green),
+                    ),
+                    Text(
+                      'Giá cũ: ${productData['price'] != null ? formatCurrency.format(productData['price']) + ' VND' : 'N/A'}',
+                      style: TextStyle(color: Colors.red, decoration: TextDecoration.lineThrough),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      'Hàng mới về! Click để xem ngay.',
+                      style: TextStyle(color: Colors.black),
+                    ),
+                    SizedBox(height: 5),
+                    Divider(),
+                  ],
+                ),
               ),
-              Text(
-                promotions[index]['message']!,
-                style: TextStyle(color: Colors.black),
-              ),
-              SizedBox(height: 5),
-              Text(
-                promotions[index]['time']!,
-                style: TextStyle(color: Colors.grey),
-              ),
-              Divider(),
-            ],
-          ),
+            );
+          },
         );
       },
     );
   }
+
+  final formatCurrency = NumberFormat.currency(locale: 'vi_VN', symbol: '');
 }
