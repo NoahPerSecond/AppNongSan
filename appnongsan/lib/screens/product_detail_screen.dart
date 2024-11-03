@@ -1,5 +1,6 @@
 import 'package:appnongsan/screens/payment_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -14,6 +15,68 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final formatCurrency = NumberFormat.currency(locale: 'vi_VN', symbol: '');
   bool _isExpanded = false; // Track whether the description is expanded
+  int _currentUserRating = 0; // User's rating
+  double _averageRating = 0.0; // Average rating
+  int _totalRatings = 0; // Count of total ratings
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRatings(); // Load ratings when the screen initializes
+  }
+
+  // Method to fetch user's rating and average rating
+  void _fetchRatings() async {
+    final userId = FirebaseAuth
+        .instance.currentUser!.uid; // Replace with the logged-in user's ID
+
+    final productRef =
+        FirebaseFirestore.instance.collection('product').doc(widget.productId);
+
+    // Get user's rating
+    final userRatingDoc =
+        await productRef.collection('ratings').doc(userId).get();
+    if (userRatingDoc.exists) {
+      setState(() {
+        _currentUserRating = userRatingDoc['rating'];
+      });
+    }
+
+    // Calculate average rating
+    final ratingsSnapshot = await productRef.collection('ratings').get();
+    int totalRatingValue = 0;
+    int ratingCount = ratingsSnapshot.docs.length;
+
+    for (var doc in ratingsSnapshot.docs) {
+      totalRatingValue += (doc['rating'] as num).toInt();
+    }
+
+    setState(() {
+      _averageRating = ratingCount > 0 ? totalRatingValue / ratingCount : 0.0;
+      _totalRatings = ratingCount;
+    });
+  }
+
+  // Update the user's rating in Firestore
+  void _updateRating(int rating) async {
+    final userId = FirebaseAuth
+        .instance.currentUser!.uid; // Replace with the logged-in user's ID
+
+    await FirebaseFirestore.instance
+        .collection('product')
+        .doc(widget.productId)
+        .collection('ratings')
+        .doc(userId)
+        .set({
+      'rating': rating,
+    });
+
+    setState(() {
+      _currentUserRating = rating;
+    });
+
+    _fetchRatings(); // Refresh the average rating after updating
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,11 +112,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Display product image
+                      // Product image
                       Image.network(productData['imageUrl']),
                       const SizedBox(height: 10),
-
-                      // Product name
                       Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: Text(
@@ -64,77 +125,86 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           ),
                         ),
                       ),
-
-                      // Price Section
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // New price (if applicable)
-                            if (productData['newPrice'] != null &&
-                                productData['newPrice'] > 0) ...[
-                              Row(
-                                children: [
-                                  Text(
-                                    '${formatCurrency.format(productData['newPrice'])} VND',
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      color: Colors.green,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 30),
-                                  // Show the original price with strikethrough
-                                  Text(
-                                    '${formatCurrency.format(productData['price'])} VND',
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      color: Colors.red,
-                                      decoration: TextDecoration.lineThrough,
-                                    ),
-                                  ),
-                                ],
+                            Text(
+                              '${formatCurrency.format(productData['price'])} VND',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
                               ),
-                            ] else ...[
-                              // If newPrice is not available, just show the original price
-                              Text(
-                                '${formatCurrency.format(productData['price'])} VND',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                            ),
                             const SizedBox(height: 10),
-
-                            // Origin
                             Text(
                               'Xuất xứ: ${productData['origin']}',
                               style: const TextStyle(fontSize: 16),
                             ),
                             const SizedBox(height: 10),
-
-                            // Stock quantity
                             Text(
                               'Số lượng: ${productData['stockQuantity']}',
                               style: const TextStyle(fontSize: 16),
                             ),
                             const SizedBox(height: 10),
+
+                            // Average Rating Display
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.start ,
+                              children: [
+                                Row(
+                                  children: List.generate(5, (index) {
+                                    return Icon(
+                                      Icons.star,
+                                      size: 15,
+                                      color: index < _averageRating
+                                          ? Colors.yellow
+                                          : Colors.grey,
+                                    );
+                                  }),
+                                ),
+                                SizedBox(
+                                  width: 20,
+                                ),
+                                Text(
+                                  _averageRating.toStringAsFixed(1),
+                                  style: const TextStyle(
+                                      fontSize: 14, color: Colors.grey),
+                                ),
+                                SizedBox(
+                                  width: 10,
+                                ),
+                                Text(
+                                  '( '+ _totalRatings.toString() + ' đánh giá )',style: const TextStyle(
+                                      fontSize: 14, color: Colors.grey),
+                                )
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+
+                            // User's Rating Section
+                            Text(
+                              'Đánh giá của bạn:',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
                               children: List.generate(5, (index) {
-                                return Icon(
-                                  index < productData['rating']
-                                      ? Icons.star
-                                      : Icons.star_border,
-                                  color: Colors.yellow,
+                                return IconButton(
+                                  icon: Icon(
+                                    index < _currentUserRating
+                                        ? Icons.star
+                                        : Icons.star_border,
+                                    color: Colors.yellow,
+                                  ),
+                                  onPressed: () {
+                                    _updateRating(index + 1);
+                                  },
                                 );
                               }),
                             ),
                             const SizedBox(height: 20),
-
                             // Description Header
                             const Text(
                               'Chi tiết sản phẩm:',
@@ -180,8 +250,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ),
 
                             const SizedBox(height: 10),
-
-                            // Rating
+                            // Description, etc.
                           ],
                         ),
                       ),
@@ -189,8 +258,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
                 ),
               ),
-
-              // Fixed "Đặt hàng ngay" button at the bottom
+              // "Đặt hàng ngay" button, etc.
               Container(
                 height: 60, // Fixed height for the button
                 width: double.infinity, // Full width
@@ -211,8 +279,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   onPressed: () {
                     // Handle order action
                     Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => PaymentPage(productId: widget.productId,)),
-                  );
+                      MaterialPageRoute(
+                          builder: (context) => PaymentPage(
+                                productId: widget.productId,
+                              )),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:

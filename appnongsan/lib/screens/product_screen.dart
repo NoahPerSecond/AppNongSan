@@ -41,7 +41,7 @@ class ProductScreen extends StatelessWidget {
             return GridView.builder(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2, // 2 cards per row
-                childAspectRatio: 0.75, // Adjust this value for height/width ratio
+                childAspectRatio: 0.9, // Adjust this value for height/width ratio
                 crossAxisSpacing: 8.0, // Space between cards horizontally
                 mainAxisSpacing: 8.0, // Space between cards vertically
               ),

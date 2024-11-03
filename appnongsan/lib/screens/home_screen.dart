@@ -94,24 +94,24 @@ class _HomeScreenState extends State<HomeScreen> {
       'assets/slider3.jpg'
     ];
 
-    // Lấy lịch sử tìm kiếm từ SharedPreferences
-    _loadSearchHistory() async {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      setState(() {
-        _searchHistory = prefs.getStringList('searchHistory') ?? [];
-      });
-    }
+    // // Lấy lịch sử tìm kiếm từ SharedPreferences
+    // _loadSearchHistory() async {
+    //   SharedPreferences prefs = await SharedPreferences.getInstance();
+    //   setState(() {
+    //     _searchHistory = prefs.getStringList('searchHistory') ?? [];
+    //   });
+    // }
 
-    // Lưu lịch sử tìm kiếm vào SharedPreferences
-    _saveSearchHistory(String query) async {
-      if (query.isNotEmpty) {
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        setState(() {
-          _searchHistory.add(query);
-          prefs.setStringList('searchHistory', _searchHistory);
-        });
-      }
-    }
+    // // Lưu lịch sử tìm kiếm vào SharedPreferences
+    // _saveSearchHistory(String query) async {
+    //   if (query.isNotEmpty) {
+    //     SharedPreferences prefs = await SharedPreferences.getInstance();
+    //     setState(() {
+    //       _searchHistory.add(query);
+    //       prefs.setStringList('searchHistory', _searchHistory);
+    //     });
+    //   }
+    // }
 
     final GlobalKey<ScaffoldState> scaffoldKey =
         GlobalKeyManager().getScaffoldKey;

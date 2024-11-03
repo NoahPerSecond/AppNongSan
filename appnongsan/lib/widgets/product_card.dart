@@ -18,11 +18,45 @@ class _ProductCardState extends State<ProductCard> {
   bool _isFavorite = false;
   bool _isInCart = false;
   final formatCurrency = NumberFormat.currency(locale: 'vi_VN', symbol: '');
+  double _averageRating = 0.0; // Average rating
+  int _totalRatings = 0; // Count of total ratings
   @override
   void initState() {
     super.initState();
     checkIfFavorite();
     checkIfInCart();
+    _fetchRatings();
+  }
+
+  void _fetchRatings() async {
+    final userId = FirebaseAuth
+        .instance.currentUser!.uid; // Replace with the logged-in user's ID
+
+    final productRef =
+        FirebaseFirestore.instance.collection('product').doc(widget.productId);
+
+    // Get user's rating
+    final userRatingDoc =
+        await productRef.collection('ratings').doc(userId).get();
+    // if (userRatingDoc.exists) {
+    //   setState(() {
+    //     _currentUserRating = userRatingDoc['rating'];
+    //   });
+    // }
+
+    // Calculate average rating
+    final ratingsSnapshot = await productRef.collection('ratings').get();
+    int totalRatingValue = 0;
+    int ratingCount = ratingsSnapshot.docs.length;
+
+    for (var doc in ratingsSnapshot.docs) {
+      totalRatingValue += (doc['rating'] as num).toInt();
+    }
+
+    setState(() {
+      _averageRating = ratingCount > 0 ? totalRatingValue / ratingCount : 0.0;
+      _totalRatings = ratingCount;
+    });
   }
 
   Future<void> addToCart() async {
@@ -177,7 +211,7 @@ class _ProductCardState extends State<ProductCard> {
                       topLeft: Radius.circular(20),
                       topRight: Radius.circular(20)),
                   child: Image(
-                    width: 180,
+                    width: 200,
                     height: 110,
                     fit: BoxFit.cover,
                     image: NetworkImage(
@@ -198,15 +232,29 @@ class _ProductCardState extends State<ProductCard> {
                             fontSize: 16, fontWeight: FontWeight.w500),
                       ),
                       Row(
-                        children: List.generate(5, (index) {
-                          return Icon(
-                            size: 15,
-                            Icons.star,
-                            color: index < widget.snap['rating']
-                                ? Colors.yellow
-                                : Colors.grey,
-                          );
-                        }),
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: List.generate(5, (index) {
+                              return Icon(
+                                Icons.star,
+                                size: 15,
+                                color: index < _averageRating
+                                    ? Colors.yellow
+                                    : Colors.grey,
+                              );
+                            }),
+                          ),
+                          SizedBox(
+                            width: 20,
+                          ),
+                          Text(
+                            _averageRating.toStringAsFixed(1),
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.grey),
+                          ),
+                          
+                        ],
                       ),
                       (widget.snap['isSale'])
                           ? Column(

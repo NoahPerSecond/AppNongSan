@@ -1,6 +1,7 @@
 import 'package:appnongsan/screens/home_screen.dart';
 import 'package:appnongsan/screens/product_detail_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -111,10 +112,11 @@ class _NotificationFormState extends State<NotificationForm> {
 }
 
 class NotificationList extends StatelessWidget {
+  final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('orders').snapshots(),
+      stream: FirebaseFirestore.instance.collection('orders').where('userId', isEqualTo: currentUserId).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
@@ -213,38 +215,47 @@ class PromotionList extends StatelessWidget {
           itemBuilder: (context, index) {
             final productData = promotions[index].data() as Map<String, dynamic>;
 
-            return InkWell(
-              onTap:()=> Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => ProductDetailScreen(productId: productData['id']),
-                      ),
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Hiển thị ảnh sản phẩm
+                  if (productData['imageUrl'] != null)
+                    Image.network(
+                      productData['imageUrl'],
+                      height: 150,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
                     ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      productData['name'] ?? 'Tên sản phẩm',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                    ),
-                    Text(
-                      'Giá mới: ${productData['newPrice'] != null ? formatCurrency.format(productData['newPrice']) + ' VND' : 'N/A'}',
-                      style: TextStyle(color: Colors.green),
-                    ),
-                    Text(
-                      'Giá cũ: ${productData['price'] != null ? formatCurrency.format(productData['price']) + ' VND' : 'N/A'}',
-                      style: TextStyle(color: Colors.red, decoration: TextDecoration.lineThrough),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Hàng mới về! Click để xem ngay.',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                    SizedBox(height: 5),
-                    Divider(),
-                  ],
-                ),
+                  const SizedBox(height: 5),
+                  
+                  // Tên sản phẩm
+                  Text(
+                    productData['name'] ?? 'Tên sản phẩm',
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                  ),
+                  
+                  // Giá mới và giá cũ
+                  Text(
+                    'Giá mới: ${productData['newPrice'] != null ? formatCurrency.format(productData['newPrice']) + ' VND' : 'N/A'}',
+                    style: TextStyle(color: Colors.green),
+                  ),
+                  Text(
+                    'Giá cũ: ${productData['price'] != null ? formatCurrency.format(productData['price']) + ' VND' : 'N/A'}',
+                    style: TextStyle(color: Colors.red, decoration: TextDecoration.lineThrough),
+                  ),
+                  const SizedBox(height: 5),
+                  
+                  // Mô tả khuyến mãi
+                  Text(
+                    'Hàng mới về! Click để xem ngay.',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                  
+                  const SizedBox(height: 5),
+                  Divider(),
+                ],
               ),
             );
           },

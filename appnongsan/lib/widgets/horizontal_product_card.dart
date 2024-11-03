@@ -19,12 +19,46 @@ class _HorizontalProductCardState extends State<HorizontalProductCard> {
   int _quantity = 1;
   bool _isInCart = false;
   final formatCurrency = NumberFormat.currency(locale: 'vi_VN', symbol: '');
+  double _averageRating = 0.0; // Average rating
+  int _totalRatings = 0; // Count of total ratings
 
   @override
   void initState() {
     super.initState();
     checkIfFavorite();
     checkIfInCart();
+    _fetchRatings();
+  }
+
+  void _fetchRatings() async {
+    final userId = FirebaseAuth
+        .instance.currentUser!.uid; // Replace with the logged-in user's ID
+
+    final productRef =
+        FirebaseFirestore.instance.collection('product').doc(widget.productId);
+
+    // Get user's rating
+    final userRatingDoc =
+        await productRef.collection('ratings').doc(userId).get();
+    // if (userRatingDoc.exists) {
+    //   setState(() {
+    //     _currentUserRating = userRatingDoc['rating'];
+    //   });
+    // }
+
+    // Calculate average rating
+    final ratingsSnapshot = await productRef.collection('ratings').get();
+    int totalRatingValue = 0;
+    int ratingCount = ratingsSnapshot.docs.length;
+
+    for (var doc in ratingsSnapshot.docs) {
+      totalRatingValue += (doc['rating'] as num).toInt();
+    }
+
+    setState(() {
+      _averageRating = ratingCount > 0 ? totalRatingValue / ratingCount : 0.0;
+      _totalRatings = ratingCount;
+    });
   }
 
   Future<void> addToCart() async {
@@ -174,9 +208,12 @@ class _HorizontalProductCardState extends State<HorizontalProductCard> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () =>Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => ProductDetailScreen(productId: widget.productId!,)),
-                  ),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+            builder: (context) => ProductDetailScreen(
+                  productId: widget.productId!,
+                )),
+      ),
       child: Stack(
         children: [
           Padding(
@@ -214,15 +251,35 @@ class _HorizontalProductCardState extends State<HorizontalProductCard> {
                         ),
                         SizedBox(height: 5),
                         Row(
-                          children: List.generate(5, (index) {
-                            return Icon(
-                              size: 15,
-                              Icons.star,
-                              color: index < widget.snap['rating']
-                                  ? Colors.yellow
-                                  : Colors.grey,
-                            );
-                          }),
+                          children: [
+                            Row(
+                              children: List.generate(5, (index) {
+                                return Icon(
+                                  Icons.star,
+                                  size: 15,
+                                  color: index < _averageRating
+                                      ? Colors.yellow
+                                      : Colors.grey,
+                                );
+                              }),
+                            ),
+                            SizedBox(
+                              width: 20,
+                            ),
+                            Text(
+                              _averageRating.toStringAsFixed(1),
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.grey),
+                            ),
+                            SizedBox(
+                              width: 10,
+                            ),
+                            Text(
+                              '( ' + _totalRatings.toString() + ' đánh giá )',
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.grey),
+                            )
+                          ],
                         ),
                         SizedBox(height: 5),
                         (widget.snap['isSale'])
@@ -324,7 +381,9 @@ class _HorizontalProductCardState extends State<HorizontalProductCard> {
                   }
                 },
                 icon: Icon(
-                  _isInCart ? Icons.shopping_cart : Icons.shopping_cart_outlined,
+                  _isInCart
+                      ? Icons.shopping_cart
+                      : Icons.shopping_cart_outlined,
                   size: 20,
                   color: _isInCart ? Colors.red : Colors.black,
                 ),
