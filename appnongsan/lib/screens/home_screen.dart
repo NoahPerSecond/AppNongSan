@@ -1,4 +1,5 @@
 import 'package:appnongsan/screens/cart_screen.dart';
+import 'package:appnongsan/screens/category_screen.dart';
 import 'package:appnongsan/utils/utils.dart';
 import 'package:appnongsan/widgets/product_card.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -17,6 +18,54 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _cartItemCount = 0;
+
+  Future<void> calculateAndUpdateSaleCount() async {
+    try {
+      // Get a reference to the 'orders' collection
+      CollectionReference ordersCollection =
+          FirebaseFirestore.instance.collection('orders');
+
+      // Fetch all orders
+      QuerySnapshot ordersSnapshot = await ordersCollection.get();
+
+      // Map to store the sale count for each product
+      Map<String, int> salesCountMap = {};
+
+      // Iterate through each order
+      for (var orderDoc in ordersSnapshot.docs) {
+        String productId = orderDoc['productId'];
+        int quantity = orderDoc['quantity'];
+
+        // Aggregate the sale count for each product
+        if (salesCountMap.containsKey(productId)) {
+          salesCountMap[productId] = salesCountMap[productId]! + quantity;
+        } else {
+          salesCountMap[productId] = quantity;
+        }
+      }
+
+      // Update each product with the calculated sale count
+      CollectionReference productsCollection =
+          FirebaseFirestore.instance.collection('product');
+
+      for (String productId in salesCountMap.keys) {
+        await productsCollection.doc(productId).update({
+          'saleCount': salesCountMap[productId],
+        });
+      }
+
+      // Show a confirmation message
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text('Sale counts updated successfully!')),
+      // );
+    } catch (e) {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
   Future<int> getCartItemCount() async {
     User? user = FirebaseAuth.instance.currentUser;
     int totalQuantity = 0;
@@ -83,6 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadCartItemCount();
     listenToCartChanges();
+    calculateAndUpdateSaleCount();
   }
 
   @override
@@ -249,7 +299,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           radius: 30,
                           backgroundColor: Colors.green,
                           child: InkWell(
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CategoryScreen(
+                                        categoryName: 'Trái cây'),
+                                  ),
+                                );
+                              },
                               child: Image.asset(
                                 'assets/apple.png',
                                 color: Colors.white,
@@ -268,7 +326,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           radius: 30,
                           backgroundColor: Colors.green,
                           child: InkWell(
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        CategoryScreen(categoryName: 'Rau củ'),
+                                  ),
+                                );
+                              },
                               child: Image.asset(
                                 'assets/broccoli.png',
                                 color: Colors.white,
@@ -290,7 +356,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           radius: 30,
                           backgroundColor: Colors.green,
                           child: InkWell(
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        CategoryScreen(categoryName: 'Gạo'),
+                                  ),
+                                );
+                              },
                               child: Image.asset(
                                 'assets/wheat.png',
                                 color: Colors.white,
@@ -319,7 +393,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('Sản phẩm bán chạy'),
-                  Text('Xem thêm'),
+                  InkWell(onTap: () {}, child: Text('Xem thêm')),
                 ],
               ),
             ),
@@ -331,6 +405,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: StreamBuilder(
                       stream: FirebaseFirestore.instance
                           .collection('product')
+                          .orderBy('saleCount', descending: true)
                           .snapshots(),
                       builder: (context,
                           AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
@@ -361,7 +436,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('Sản phẩm mới về'),
-                  Text('Xem thêm'),
+                  InkWell(onTap: () {}, child: Text('Xem thêm')),
                 ],
               ),
             ),
@@ -373,6 +448,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: StreamBuilder(
                       stream: FirebaseFirestore.instance
                           .collection('product')
+                          .orderBy('createdAt')
                           .snapshots(),
                       builder: (context,
                           AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>

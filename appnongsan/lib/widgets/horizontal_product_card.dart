@@ -264,7 +264,7 @@ class _HorizontalProductCardState extends State<HorizontalProductCard> {
                               }),
                             ),
                             SizedBox(
-                              width: 20,
+                              width: 5,
                             ),
                             Text(
                               _averageRating.toStringAsFixed(1),
@@ -272,7 +272,7 @@ class _HorizontalProductCardState extends State<HorizontalProductCard> {
                                   fontSize: 14, color: Colors.grey),
                             ),
                             SizedBox(
-                              width: 10,
+                              width: 5,
                             ),
                             Text(
                               '( ' + _totalRatings.toString() + ' đánh giá )',

@@ -246,14 +246,18 @@ class _ProductCardState extends State<ProductCard> {
                             }),
                           ),
                           SizedBox(
-                            width: 20,
+                            width: 5,
                           ),
                           Text(
                             _averageRating.toStringAsFixed(1),
                             style: const TextStyle(
-                                fontSize: 14, color: Colors.grey),
+                                fontSize: 10, color: Colors.grey),
                           ),
-                          
+                          Text(
+                            ' (' + _totalRatings.toString() + ' đánh giá)',
+                            style: const TextStyle(
+                                fontSize: 10, color: Colors.grey),
+                          ),
                         ],
                       ),
                       (widget.snap['isSale'])
@@ -353,6 +357,20 @@ class _ProductCardState extends State<ProductCard> {
                       color: _isInCart ? Colors.red : Colors.black,
                     )),
               )),
+          Positioned(
+            bottom: 8,
+            right: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Text(
+                '${widget.snap['saleCount']} lượt bán',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class ProductDetailScreen extends StatefulWidget {
-  const ProductDetailScreen({super.key, required this.productId});
+  const ProductDetailScreen({
+    super.key,
+    required this.productId,
+  });
   final String productId;
 
   @override
@@ -18,11 +21,24 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _currentUserRating = 0; // User's rating
   double _averageRating = 0.0; // Average rating
   int _totalRatings = 0; // Count of total ratings
+  String appbarName = '';
 
   @override
   void initState() {
     super.initState();
     _fetchRatings(); // Load ratings when the screen initializes
+    getAppBarName();
+  }
+
+  void getAppBarName() async {
+    final productRef = await FirebaseFirestore.instance
+        .collection('product')
+        .doc(widget.productId)
+        .get();
+
+    setState(() {
+      appbarName = productRef['name'];
+    });
   }
 
   // Method to fetch user's rating and average rating
@@ -82,7 +98,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Product Details"),
+        title: Text(appbarName),
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
@@ -113,7 +129,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Product image
-                      Image.network(productData['imageUrl']),
+                      Image.network(
+                        productData['imageUrl'],
+                        fit: BoxFit
+                            .cover, // Đảm bảo hình ảnh lấp đầy khung mà không bị méo
+                        width: double
+                            .infinity, // Đặt chiều rộng của hình ảnh bằng với chiều rộng của khung cha
+                        height: 250.0, // Đặt chiều cao tùy ý cho khung ảnh
+                      ),
+
                       const SizedBox(height: 10),
                       Padding(
                         padding: const EdgeInsets.all(12.0),
@@ -165,7 +189,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                   }),
                                 ),
                                 SizedBox(
-                                  width: 20,
+                                  width: 10,
                                 ),
                                 Text(
                                   _averageRating.toStringAsFixed(1),
@@ -176,13 +200,24 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                   width: 10,
                                 ),
                                 Text(
-                                  '( '+ _totalRatings.toString() + ' đánh giá )',style: const TextStyle(
+                                  '( ' +
+                                      _totalRatings.toString() +
+                                      ' đánh giá )',
+                                  style: const TextStyle(
                                       fontSize: 14, color: Colors.grey),
                                 )
                               ],
                             ),
                             const SizedBox(height: 10),
-
+                            Text(
+                              '' +
+                                  productData['saleCount'].toString() +
+                                  ' lượt bán',
+                              style: const TextStyle(
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
                             // User's Rating Section
                             Text(
                               'Đánh giá của bạn:',

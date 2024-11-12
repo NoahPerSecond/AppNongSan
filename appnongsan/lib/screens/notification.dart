@@ -116,61 +116,67 @@ class NotificationList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('orders').where('userId', isEqualTo: currentUserId).snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Center(child: Text('Lỗi: ${snapshot.error}'));
-        }
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(child: Text('Chưa có thông báo đơn hàng.'));
-        }
+  stream: FirebaseFirestore.instance
+      .collection('orders')
+      .where('userId', isEqualTo: currentUserId)
+      .orderBy('timestamp', descending: true) // Sắp xếp giảm dần
+      .snapshots(),
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return Center(child: CircularProgressIndicator());
+    }
+    if (snapshot.hasError) {
+      return Center(child: Text('Lỗi: ${snapshot.error}'));
+    }
+    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+      return Center(child: Text('Chưa có thông báo đơn hàng.'));
+    }
 
-        final orders = snapshot.data!.docs;
+    final orders = snapshot.data!.docs;
 
-        return ListView.builder(
-          itemCount: orders.length,
-          itemBuilder: (context, index) {
-            final orderData = orders[index].data() as Map<String, dynamic>;
+    return ListView.builder(
+      itemCount: orders.length,
+      itemBuilder: (context, index) {
+        final orderData = orders[index].data() as Map<String, dynamic>;
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        const TextSpan(
-                          text: 'Đơn hàng ',
-                          style: TextStyle(color: Colors.black),
-                        ),
-                        TextSpan(
-                          text: orderData['productName'] ?? 'N/A',
-                          style: TextStyle(
-                              color: Colors.green, fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text:
-                              ' ${_getOrderStatusMessage(orderData['orderStatus'])}',
-                          style: const TextStyle(color: Colors.black),
-                        ),
-                      ],
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              RichText(
+                text: TextSpan(
+                  children: [
+                    const TextSpan(
+                      text: 'Đơn hàng ',
+                      style: TextStyle(color: Colors.black),
                     ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(orderData['timestamp']?.toDate().toString() ?? '',
-                      style: TextStyle(color: Colors.grey)),
-                  const Divider(),
-                ],
+                    TextSpan(
+                      text: orderData['productName'] ?? 'N/A',
+                      style: TextStyle(
+                          color: Colors.green, fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(
+                      text: ' ${_getOrderStatusMessage(orderData['orderStatus'])}',
+                      style: const TextStyle(color: Colors.black),
+                    ),
+                  ],
+                ),
               ),
-            );
-          },
+              const SizedBox(height: 5),
+              Text(
+                orderData['timestamp']?.toDate().toString() ?? '',
+                style: TextStyle(color: Colors.grey),
+              ),
+              const Divider(),
+            ],
+          ),
         );
       },
     );
+  },
+);
+
   }
 
   String _getOrderStatusMessage(String? status) {

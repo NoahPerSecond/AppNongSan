@@ -1,3 +1,4 @@
+import 'package:appnongsan/screens/result_search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -48,7 +49,9 @@ class _SearchScreenState extends State<SearchScreen> {
     String query = _searchController.text;
     if (query.isNotEmpty) {
       _saveSearchHistory(query);
-      Navigator.pop(context, query);
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => ResultSearchScreen(word: query,)),
+      );
     }
   }
 

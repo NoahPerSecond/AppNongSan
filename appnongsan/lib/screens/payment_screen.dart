@@ -254,8 +254,13 @@ class _PaymentPageState extends State<PaymentPage> {
                       }),
                     ],
                   ),
-                  const SizedBox(height: 20),
-
+                  const SizedBox(height: 10),
+                  Text(
+                    "Đơn vị: Hộp 1 KG",
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
                   // Total amount
                   Text(
                     "Tổng cộng: ${(price * quantity).toStringAsFixed(0)} VND",
