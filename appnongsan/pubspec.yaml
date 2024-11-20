@@ -1,0 +1,43 @@
+name: appnongsan
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.4.4 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  font_awesome_flutter: ^10.1.0
+  firebase_core: ^3.3.0
+  cloud_firestore: ^5.1.0
+  firebase_auth: ^5.1.2
+  firebase_storage: ^12.1.1
+  flutter_svg: ^2.0.10+1
+  google_sign_in: ^6.2.1
+  firebase_app_check: ^0.3.0+4
+  carousel_slider: ^5.0.0
+  flutter_facebook_auth: ^7.1.0
+  shared_preferences: ^2.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+   - assets/logo_logo.jpg
+   - assets/fb_logo.jpg
+   - assets/gg_logo.webp
+   - assets/slider1.png
+   - assets/slider2.jpg
+   - assets/slider3.jpg
+   - assets/apple.png
+   - assets/broccoli.png
+   - assets/wheat.png
+   - assets/User.jpeg
+   - assets/Sale.jpeg
+   - assets/Sign.jpeg
