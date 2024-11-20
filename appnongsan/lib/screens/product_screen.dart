@@ -3,7 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class ProductScreen extends StatefulWidget {
-  const ProductScreen({super.key});
+  String sortBy;
+  ProductScreen({super.key, required this.sortBy});
 
   @override
   _ProductScreenState createState() => _ProductScreenState();
@@ -17,8 +18,9 @@ class _ProductScreenState extends State<ProductScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedSortBy = widget.sortBy ?? 'Giá';
     _productQuery = FirebaseFirestore.instance.collection('product');
-    _sortProducts('Giá', true);
+    _sortProducts(_selectedSortBy, true);
   }
 
   // Method to update the query based on selected sorting

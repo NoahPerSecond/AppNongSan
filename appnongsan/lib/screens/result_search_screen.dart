@@ -21,17 +21,24 @@ class _ResultSearchScreenState extends State<ResultSearchScreen> {
   }
 
   Future<List<DocumentSnapshot>> _performFirestoreSearch(String query) async {
-  query = query.trim();
-  
-  var result = await FirebaseFirestore.instance
-      .collection('product')
-      .where('name', isGreaterThanOrEqualTo: query)
-      .get();
-  
-  return result.docs;
-}
+    query = query
+        .trim()
+        .toLowerCase()
+        .replaceAll(' ', ''); // Chuẩn hóa query, bỏ dấu cách
 
+    // Lấy tất cả các sản phẩm từ Firestore
+    var result = await FirebaseFirestore.instance.collection('product').get();
+    List<DocumentSnapshot> allDocs = result.docs;
 
+    // Lọc cục bộ dựa trên tên sản phẩm (loại bỏ dấu cách trước khi so sánh)
+    List<DocumentSnapshot> filteredDocs = allDocs.where((doc) {
+      String productName =
+          (doc['name'] as String).toLowerCase().replaceAll(' ', '');
+      return productName.contains(query);
+    }).toList();
+
+    return filteredDocs;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,18 +65,22 @@ class _ResultSearchScreenState extends State<ResultSearchScreen> {
               //   },
               // );
               return GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2, // 2 cards per row
-                  childAspectRatio: 0.8, // Adjust this value for height/width ratio
-                  crossAxisSpacing: 8.0, // Space between cards horizontally
-                  mainAxisSpacing: 8.0, // Space between cards vertically
-                ),
-                itemCount: products.length,
-                itemBuilder: (context, index) {
-                  var product = products[index].data() as Map<String, dynamic>;
-                  return ProductCard(snap: product,productId: product['id'],);
-                }
-              );
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2, // 2 cards per row
+                    childAspectRatio:
+                        0.8, // Adjust this value for height/width ratio
+                    crossAxisSpacing: 8.0, // Space between cards horizontally
+                    mainAxisSpacing: 8.0, // Space between cards vertically
+                  ),
+                  itemCount: products.length,
+                  itemBuilder: (context, index) {
+                    var product =
+                        products[index].data() as Map<String, dynamic>;
+                    return ProductCard(
+                      snap: product,
+                      productId: product['id'],
+                    );
+                  });
             }
           },
         ),

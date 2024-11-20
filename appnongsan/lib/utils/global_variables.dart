@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 const webScreenSize = 600;
 List<Widget> homeScreenItems = [
   HomeScreen(),
-  ProductScreen(),
+  ProductScreen(sortBy: 'Giá',),
   FavouriteScreen(),
   NotificationForm(),
   ProfilePage()

@@ -1,5 +1,6 @@
 import 'package:appnongsan/screens/cart_screen.dart';
 import 'package:appnongsan/screens/category_screen.dart';
+import 'package:appnongsan/screens/product_screen.dart';
 import 'package:appnongsan/utils/utils.dart';
 import 'package:appnongsan/widgets/product_card.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -393,7 +394,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('Sản phẩm bán chạy'),
-                  InkWell(onTap: () {}, child: Text('Xem thêm')),
+                  InkWell(onTap: () {Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ProductScreen(sortBy: 'Lượt bán')
+                                  ),
+                                );}, child: Text('Xem thêm')),
                 ],
               ),
             ),
@@ -436,7 +443,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('Sản phẩm mới về'),
-                  InkWell(onTap: () {}, child: Text('Xem thêm')),
+                  InkWell(onTap: () {Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ProductScreen(sortBy: 'Thời gian'),
+                                  ),
+                                );}, child: Text('Xem thêm')),
                 ],
               ),
             ),
