@@ -10,28 +10,34 @@ class _FAQPageState extends State<FAQPage> {
   final List<Item> _data = [
     Item(
       headerValue: 'Cách thức mua hàng như thế nào?',
-      expandedValue: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+      expandedValue: 'Để mua hàng trên ứng dụng của chúng tôi, bạn chỉ cần chọn sản phẩm mong muốn, thêm vào giỏ hàng, và thực hiện thanh toán qua các phương thức có sẵn. Sau khi thanh toán thành công, sản phẩm sẽ được giao đến địa chỉ mà bạn đã cung cấp.',
     ),
+
     Item(
-      headerValue: 'Cách thức mua hàng như thế nào?',
-      expandedValue: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+      headerValue: 'Sản phẩm có đảm bảo chất lượng không?',
+      expandedValue: 'Chúng tôi cam kết chỉ cung cấp sản phẩm nông sản tươi sạch, được kiểm tra chất lượng nghiêm ngặt trước khi giao đến tay người tiêu dùng. Mọi sản phẩm đều có nguồn gốc rõ ràng và được chứng nhận an toàn vệ sinh thực phẩm.',
     ),
+
     Item(
-      headerValue: 'Cách thức mua hàng như thế nào?',
-      expandedValue: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+      headerValue: 'Chính sách đổi trả hàng như thế nào?',
+      expandedValue: 'Chúng tôi chấp nhận đổi trả trong vòng 24 giờ kể từ ngày nhận hàng nếu sản phẩm bị hư hỏng hoặc không đúng với mô tả. Bạn chỉ cần liên hệ với bộ phận hỗ trợ khách hàng và chúng tôi sẽ hướng dẫn bạn quy trình đổi trả.',
     ),
+
     Item(
-      headerValue: 'Cách thức mua hàng như thế nào?',
-      expandedValue: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+      headerValue: 'Làm sao để liên hệ với bộ phận hỗ trợ khách hàng?',
+      expandedValue: 'Bạn có thể liên hệ với bộ phận hỗ trợ khách hàng qua số điện thoại có trong mục "Liên hệ" trên ứng dụng. Chúng tôi luôn sẵn sàng hỗ trợ bạn giải quyết các vấn đề liên quan đến đơn hàng hoặc sản phẩm.',
     ),
+
     Item(
-      headerValue: 'Cách thức mua hàng như thế nào?',
-      expandedValue: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+      headerValue: 'Thời gian giao hàng là bao lâu?',
+      expandedValue: 'Thời gian giao hàng sẽ tùy thuộc vào vị trí của bạn. Thông thường, đơn hàng sẽ được giao trong vòng 2-4 ngày làm việc. Chúng tôi luôn nỗ lực giao hàng nhanh chóng và đúng hạn.',
     ),
+
     Item(
-      headerValue: 'Cách thức mua hàng như thế nào?',
-      expandedValue: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+      headerValue: 'Có thể thay đổi địa chỉ giao hàng sau khi đặt đơn không?',
+      expandedValue: 'Nếu bạn cần thay đổi địa chỉ giao hàng, vui lòng liên hệ với bộ phận hỗ trợ khách hàng ngay sau khi đặt đơn. Chúng tôi sẽ cố gắng cập nhật thông tin của bạn trước khi đơn hàng được xử lý.',
     ),
+
 
     // Thêm các mục khác nếu cần
   ];
