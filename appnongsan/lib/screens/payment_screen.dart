@@ -102,32 +102,79 @@ class _PaymentPageState extends State<PaymentPage> {
 // }
 
 
-  void saveOrder() async {
-    String userId = FirebaseAuth.instance.currentUser!.uid;
+  // void saveOrder() async {
+  //   String userId = FirebaseAuth.instance.currentUser!.uid;
 
-    // Tạo một tài liệu đơn hàng
-    await FirebaseFirestore.instance.collection('orders').add({
-      'productId': widget.productId,
-      'productName': productName, // Thêm tên sản phẩm vào đơn hàng
-      'userId': userId,
-      'recipientName': recipientNameController.text,
-      'recipientAddress': recipientAddressController.text,
-      'recipientPhoneNum': recipientPhoneNumController.text,
-      'quantity': quantity,
-      'totalAmount': price * quantity,
-      'orderStatus': 'Chờ xác nhận', // Trạng thái đơn hàng
-      'timestamp': FieldValue.serverTimestamp(), // Thêm thời gian
-    }).then((value) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Đặt hàng thành công!")),
-      );
-      Navigator.pop(context); // Quay lại màn hình trước
-    }).catchError((error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lỗi: $error")),
-      );
-    });
-  }
+  //   // Tạo một tài liệu đơn hàng
+  //   await FirebaseFirestore.instance.collection('orders').add({
+  //     'productId': widget.productId,
+  //     'productName': productName, // Thêm tên sản phẩm vào đơn hàng
+  //     'userId': userId,
+  //     'recipientName': recipientNameController.text,
+  //     'recipientAddress': recipientAddressController.text,
+  //     'recipientPhoneNum': recipientPhoneNumController.text,
+  //     'quantity': quantity,
+  //     'totalAmount': price * quantity,
+  //     'orderStatus': 'Chờ xác nhận', // Trạng thái đơn hàng
+  //     'timestamp': FieldValue.serverTimestamp(), // Thêm thời gian
+  //   }).then((value) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text("Đặt hàng thành công!")),
+  //     );
+  //     Navigator.pop(context); // Quay lại màn hình trước
+  //   }).catchError((error) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Lỗi: $error")),
+  //     );
+  //   });
+  // }
+  void saveOrder() async {
+  String userId = FirebaseAuth.instance.currentUser!.uid;
+
+  // Tạo tài liệu mới trong collection 'orders'
+  DocumentReference orderRef = FirebaseFirestore.instance.collection('orders').doc();
+
+  await orderRef.set({
+    'orderId': orderRef.id, // Gán orderId bằng ID tài liệu
+    'productId': widget.productId, // Thêm productId
+    'productName': productName, // Thêm tên sản phẩm vào đơn hàng
+    'userId': userId,
+    'recipientName': recipientNameController.text,
+    'recipientAddress': recipientAddressController.text,
+    'recipientPhoneNum': recipientPhoneNumController.text,
+    'quantity': quantity,
+    'totalAmount': price * quantity,
+    'orderStatus': 'Chờ xác nhận', // Trạng thái đơn hàng
+    'timestamp': FieldValue.serverTimestamp(), // Thời gian tạo đơn hàng
+  }).then((value) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Đặt hàng thành công!")),
+    );
+    Navigator.pop(context); // Quay lại màn hình trước
+  }).catchError((error) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Lỗi: $error")),
+    );
+  });
+}
+
+//   void addOrderIdsToAllOrders() async {
+//   // Lấy tất cả tài liệu trong collection 'orders'
+//   final ordersSnapshot = await FirebaseFirestore.instance.collection('orders').get();
+
+//   for (var doc in ordersSnapshot.docs) {
+//     // Kiểm tra nếu tài liệu chưa có trường 'orderId'
+//     if (!doc.data().containsKey('orderId')) {
+//       await doc.reference.update({'orderId': doc.id});
+//     }
+//   }
+
+//   ScaffoldMessenger.of(context).showSnackBar(
+//     const SnackBar(content: Text("Đã thêm orderId cho tất cả các đơn hàng!")),
+//   );
+// }
+
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -280,7 +327,7 @@ class _PaymentPageState extends State<PaymentPage> {
                       ),
                       onPressed: () {
                         saveOrder();
-                      
+                        // addOrderIdsToAllOrders();
                       },
                       child: const Text("Xác Nhận Thanh Toán"),
                     ),

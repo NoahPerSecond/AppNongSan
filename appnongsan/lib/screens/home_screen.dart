@@ -6,6 +6,7 @@ import 'package:appnongsan/widgets/product_card.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:appnongsan/screens/search_screen.dart';
@@ -19,6 +20,51 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _cartItemCount = 0;
+  List<String> _bannerUrls = [];
+
+  Future<void> _refreshHomeScreen() async {
+  await _loadCartItemCount(); // Làm mới giỏ hàng
+  await _loadBanners(); // Làm mới banner
+  setState(() {
+    // Cập nhật lại giao diện nếu cần
+  });
+}
+
+  Future<void> _loadBanners() async {
+    final urls = await fetchLatestBannerUrls();
+    setState(() {
+      _bannerUrls = urls;
+    });
+  }
+
+  Future<List<String>> fetchLatestBannerUrls() async {
+  try {
+    final ListResult result =
+        await FirebaseStorage.instance.ref('banners').listAll();
+
+    // Lấy danh sách các file
+    final List<Reference> allFiles = result.items;
+
+    // Sắp xếp file theo tên (giả sử tên file chứa timestamp)
+    allFiles.sort((a, b) => b.name.compareTo(a.name)); // Descending order
+
+    // Lấy 3 file mới nhất
+    final List<Reference> latestFiles = allFiles.take(3).toList();
+
+    // Lấy URL tải xuống cho từng file
+    List<String> urls = [];
+    for (Reference file in latestFiles) {
+      final String url = await file.getDownloadURL();
+      urls.add(url);
+    }
+
+    return urls;
+  } catch (e) {
+    print("Error fetching banners: $e");
+    return [];
+  }
+}
+
 
   Future<void> calculateAndUpdateSaleCount() async {
     try {
@@ -134,16 +180,17 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadCartItemCount();
     listenToCartChanges();
     calculateAndUpdateSaleCount();
+    _loadBanners();
   }
 
   @override
   Widget build(BuildContext context) {
     List<String> _searchHistory = [];
-    final List<String> imgSliderList = [
-      'assets/slider1.png',
-      'assets/slider2.jpg',
-      'assets/slider3.jpg'
-    ];
+    // final List<String> imgSliderList = [
+    //   'assets/slider1.png',
+    //   'assets/slider2.jpg',
+    //   'assets/slider3.jpg'
+    // ];
 
     // // Lấy lịch sử tìm kiếm từ SharedPreferences
     // _loadSearchHistory() async {
@@ -256,234 +303,237 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            SizedBox(
-              height: 16,
-            ),
-            CarouselSlider(
-              items: imgSliderList
-                  .map((item) => Container(
-                        width: MediaQuery.of(context)
-                            .size
-                            .width, // Chiều rộng bằng chiều rộng màn hình
-                        height: 200, // Chiều cao cố định của mỗi item
-                        margin: EdgeInsets.all(5.0),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10.0), // Bo góc
-                          image: DecorationImage(
-                            image: AssetImage(item),
-                            fit: BoxFit.fill, // Đảm bảo ảnh phủ đầy container
+      body: RefreshIndicator(
+        onRefresh: _refreshHomeScreen,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              SizedBox(
+                height: 16,
+              ),
+              CarouselSlider(
+                items: _bannerUrls
+                    .map((item) => Container(
+                          width: MediaQuery.of(context)
+                              .size
+                              .width, // Chiều rộng bằng chiều rộng màn hình
+                          height: 200, // Chiều cao cố định của mỗi item
+                          margin: EdgeInsets.all(5.0),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10.0), // Bo góc
+                            image: DecorationImage(
+                              image: NetworkImage(item),
+                              fit: BoxFit.fill, // Đảm bảo ảnh phủ đầy container
+                            ),
                           ),
-                        ),
-                      ))
-                  .toList(),
-              options: CarouselOptions(
-                height: 200.0,
-                autoPlay: true, // Tự động di chuyển
-                // enlargeCenterPage: true,
-                aspectRatio: 16 / 9,
-                viewportFraction: 0.9,
-              ),
-            ),
-            SizedBox(
-              height: 16,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Column(
-                    children: [
-                      CircleAvatar(
-                          radius: 30,
-                          backgroundColor: Colors.green,
-                          child: InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => CategoryScreen(
-                                        categoryName: 'Trái cây'),
-                                  ),
-                                );
-                              },
-                              child: Image.asset(
-                                'assets/apple.png',
-                                color: Colors.white,
-                                width: 40,
-                                height: 40,
-                              ))),
-                      Text('Trái cây'),
-                    ],
-                  ),
-                  SizedBox(
-                    width: 8,
-                  ),
-                  Column(
-                    children: [
-                      CircleAvatar(
-                          radius: 30,
-                          backgroundColor: Colors.green,
-                          child: InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        CategoryScreen(categoryName: 'Rau củ'),
-                                  ),
-                                );
-                              },
-                              child: Image.asset(
-                                'assets/broccoli.png',
-                                color: Colors.white,
-                                width: 40,
-                                height: 40,
-                              ))),
-                      Text('Rau củ'),
-                      SizedBox(
-                        width: 16,
-                      )
-                    ],
-                  ),
-                  SizedBox(
-                    width: 8,
-                  ),
-                  Column(
-                    children: [
-                      CircleAvatar(
-                          radius: 30,
-                          backgroundColor: Colors.green,
-                          child: InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        CategoryScreen(categoryName: 'Gạo'),
-                                  ),
-                                );
-                              },
-                              child: Image.asset(
-                                'assets/wheat.png',
-                                color: Colors.white,
-                                width: 40,
-                                height: 40,
-                              ))),
-                      Text('Gạo'),
-                      SizedBox(
-                        width: 16,
-                      )
-                    ],
-                  ),
-                  SizedBox(
-                    width: 8,
-                  ),
-                ],
-              ),
-            ),
-            Divider(
-              color: Colors.grey, // Màu của đường kẻ
-              thickness: 0.2, // Độ dày của đường kẻ
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Sản phẩm bán chạy'),
-                  InkWell(onTap: () {Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        ProductScreen(sortBy: 'Lượt bán')
-                                  ),
-                                );}, child: Text('Xem thêm')),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: SingleChildScrollView(
-                child: Container(
-                  height: 230,
-                  child: StreamBuilder(
-                      stream: FirebaseFirestore.instance
-                          .collection('product')
-                          .orderBy('saleCount', descending: true)
-                          .snapshots(),
-                      builder: (context,
-                          AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
-                              snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-                        return ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: snapshot.data!.docs.length,
-                            itemBuilder: (context, index) => ProductCard(
-                                snap: snapshot.data!.docs[index].data(),
-                                productId: snapshot.data!.docs[index].id));
-                      }),
+                        ))
+                    .toList(),
+                options: CarouselOptions(
+                  height: 200.0,
+                  autoPlay: true, // Tự động di chuyển
+                  // enlargeCenterPage: true,
+                  aspectRatio: 16 / 9,
+                  viewportFraction: 0.9,
                 ),
               ),
-            ),
-            Divider(
-              color: Colors.grey, // Màu của đường kẻ
-              thickness: 0.2, // Độ dày của đường kẻ
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Sản phẩm mới về'),
-                  InkWell(onTap: () {Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        ProductScreen(sortBy: 'Thời gian'),
-                                  ),
-                                );}, child: Text('Xem thêm')),
-                ],
+              SizedBox(
+                height: 16,
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: SingleChildScrollView(
-                child: Container(
-                  height: 230,
-                  child: StreamBuilder(
-                      stream: FirebaseFirestore.instance
-                          .collection('product')
-                          .orderBy('createdAt')
-                          .snapshots(),
-                      builder: (context,
-                          AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
-                              snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-                        return ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: snapshot.data!.docs.length,
-                            itemBuilder: (context, index) => ProductCard(
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Column(
+                      children: [
+                        CircleAvatar(
+                            radius: 30,
+                            backgroundColor: Colors.green,
+                            child: InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => CategoryScreen(
+                                          categoryName: 'Trái cây'),
+                                    ),
+                                  );
+                                },
+                                child: Image.asset(
+                                  'assets/apple.png',
+                                  color: Colors.white,
+                                  width: 40,
+                                  height: 40,
+                                ))),
+                        Text('Trái cây'),
+                      ],
+                    ),
+                    SizedBox(
+                      width: 8,
+                    ),
+                    Column(
+                      children: [
+                        CircleAvatar(
+                            radius: 30,
+                            backgroundColor: Colors.green,
+                            child: InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          CategoryScreen(categoryName: 'Rau củ'),
+                                    ),
+                                  );
+                                },
+                                child: Image.asset(
+                                  'assets/broccoli.png',
+                                  color: Colors.white,
+                                  width: 40,
+                                  height: 40,
+                                ))),
+                        Text('Rau củ'),
+                        SizedBox(
+                          width: 16,
+                        )
+                      ],
+                    ),
+                    SizedBox(
+                      width: 8,
+                    ),
+                    Column(
+                      children: [
+                        CircleAvatar(
+                            radius: 30,
+                            backgroundColor: Colors.green,
+                            child: InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          CategoryScreen(categoryName: 'Gạo'),
+                                    ),
+                                  );
+                                },
+                                child: Image.asset(
+                                  'assets/wheat.png',
+                                  color: Colors.white,
+                                  width: 40,
+                                  height: 40,
+                                ))),
+                        Text('Gạo'),
+                        SizedBox(
+                          width: 16,
+                        )
+                      ],
+                    ),
+                    SizedBox(
+                      width: 8,
+                    ),
+                  ],
+                ),
+              ),
+              Divider(
+                color: Colors.grey, // Màu của đường kẻ
+                thickness: 0.2, // Độ dày của đường kẻ
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Sản phẩm bán chạy'),
+                    InkWell(onTap: () {Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ProductScreen(sortBy: 'Lượt bán')
+                                    ),
+                                  );}, child: Text('Xem thêm')),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: SingleChildScrollView(
+                  child: Container(
+                    height: 230,
+                    child: StreamBuilder(
+                        stream: FirebaseFirestore.instance
+                            .collection('product')
+                            .orderBy('saleCount', descending: true)
+                            .snapshots(),
+                        builder: (context,
+                            AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
+                                snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+                          return ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: snapshot.data!.docs.length,
+                              itemBuilder: (context, index) => ProductCard(
                                   snap: snapshot.data!.docs[index].data(),
-                                  productId: snapshot.data!.docs[index].id,
-                                ));
-                      }),
+                                  productId: snapshot.data!.docs[index].id));
+                        }),
+                  ),
                 ),
               ),
-            ),
-          ],
+              Divider(
+                color: Colors.grey, // Màu của đường kẻ
+                thickness: 0.2, // Độ dày của đường kẻ
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Sản phẩm mới về'),
+                    InkWell(onTap: () {Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ProductScreen(sortBy: 'Thời gian'),
+                                    ),
+                                  );}, child: Text('Xem thêm')),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: SingleChildScrollView(
+                  child: Container(
+                    height: 230,
+                    child: StreamBuilder(
+                        stream: FirebaseFirestore.instance
+                            .collection('product')
+                            .orderBy('createdAt')
+                            .snapshots(),
+                        builder: (context,
+                            AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
+                                snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+                          return ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: snapshot.data!.docs.length,
+                              itemBuilder: (context, index) => ProductCard(
+                                    snap: snapshot.data!.docs[index].data(),
+                                    productId: snapshot.data!.docs[index].id,
+                                  ));
+                        }),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
