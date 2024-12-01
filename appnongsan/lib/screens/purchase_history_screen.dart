@@ -8,7 +8,7 @@ class PurchaseHistoryPage extends StatelessWidget {
     final String userId = FirebaseAuth.instance.currentUser!.uid;
 
     return DefaultTabController(
-      length: 4, // Number of tabs
+      length: 5, // Number of tabs
       child: Scaffold(
         appBar: AppBar(
           title: const Text("Lịch Sử Mua Hàng"),
@@ -19,6 +19,8 @@ class PurchaseHistoryPage extends StatelessWidget {
               Tab(child: Text("Đang\nGiao", textAlign: TextAlign.center)),
               Tab(child: Text("Hoàn\nThành", textAlign: TextAlign.center)),
               Tab(child: Text("Đã\nHủy", textAlign: TextAlign.center)),
+              Tab(child: Text("Đã\nhoàn Trả", textAlign: TextAlign.center)),
+              
             ],
           ),
         ),
@@ -28,6 +30,7 @@ class PurchaseHistoryPage extends StatelessWidget {
             OrderList(userId: userId, orderStatus: "Đang giao"),
             OrderList(userId: userId, orderStatus: "Hoàn thành"),
             OrderList(userId: userId, orderStatus: "Đã hủy"),
+            OrderList(userId: userId, orderStatus: "Đã hoàn trả"),
           ],
         ),
       ),
@@ -69,12 +72,21 @@ class OrderList extends StatelessWidget {
           itemCount: orders.length,
           itemBuilder: (context, index) {
             final orderData = orders[index].data() as Map<String, dynamic>;
-
+            final orderId = orders[index].id;
+            final orderTimestamp = orderData['timestamp']?.toDate();
+            final currentTime = DateTime.now();
+            final canReturn = orderStatus == "Hoàn thành" ;
+            // &&
+            //     orderTimestamp != null &&
+            //     currentTime.isBefore(orderTimestamp.add(Duration(hours: 3)));
             return InkWell(
               onTap: () {
                 // Only allow cancellation for "Chờ xác nhận" orders
                 if (orderStatus == "Chờ xác nhận") {
                   _showCancelDialog(context, orders[index].id); // Pass the order ID
+                }
+                if (canReturn) {
+                  _showReturnDialog(context, orderId);
                 }
               },
               child: Card(
@@ -158,3 +170,72 @@ class OrderList extends StatelessWidget {
     }
   }
 }
+
+
+  void _showReturnDialog(BuildContext context, String orderId) {
+    TextEditingController reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Hoàn trả đơn hàng'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Vui lòng nhập lý do hoàn trả:'),
+              TextField(
+                controller: reasonController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  hintText: 'Nhập lý do...',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Hủy'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (reasonController.text.isNotEmpty) {
+                  _returnOrder(context, orderId, reasonController.text);
+                  Navigator.of(context).pop(); // Close the dialog
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Vui lòng nhập lý do!')),
+                  );
+                }
+              },
+              child: const Text('Hoàn trả'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _returnOrder(BuildContext context, String orderId, String reason) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('orders')
+          .doc(orderId)
+          .update({
+            'orderStatus': 'Đã hoàn trả',
+            'returnReason': reason, // Add the return reason
+            'returnTimestamp': FieldValue.serverTimestamp(), // Record the time of return
+            'totalAmount':0,
+          });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Đơn hàng đã được hoàn trả.')),
+      );
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi: $error')),
+      );
+    }
+  }

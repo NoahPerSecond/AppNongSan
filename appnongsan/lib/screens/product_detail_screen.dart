@@ -75,24 +75,61 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   // Update the user's rating in Firestore
   void _updateRating(int rating) async {
-    final userId = FirebaseAuth
-        .instance.currentUser!.uid; // Replace with the logged-in user's ID
+  final userId = FirebaseAuth.instance.currentUser!.uid; // ID của người dùng đã đăng nhập
 
-    await FirebaseFirestore.instance
-        .collection('product')
-        .doc(widget.productId)
-        .collection('ratings')
-        .doc(userId)
-        .set({
-      'rating': rating,
-    });
+  // Cập nhật đánh giá cho người dùng hiện tại
+  await FirebaseFirestore.instance
+      .collection('product')
+      .doc(widget.productId)
+      .collection('ratings')
+      .doc(userId)
+      .set({
+    'rating': rating,
+    'userId': userId, // Thêm userId vào document
+  }, ); // Sử dụng merge để không ghi đè dữ liệu hiện tại
 
-    setState(() {
-      _currentUserRating = rating;
-    });
+  setState(() {
+    _currentUserRating = rating;
+  });
 
-    _fetchRatings(); // Refresh the average rating after updating
-  }
+  _fetchRatings(); // Làm mới đánh giá trung bình sau khi cập nhật
+}
+
+// void _addUserIdToAllRatings() async {
+//   // Lấy tất cả sản phẩm
+//   final productsSnapshot = await FirebaseFirestore.instance.collection('product').get();
+
+//   for (var productDoc in productsSnapshot.docs) {
+//     // Lấy ID sản phẩm
+//     final productId = productDoc.id;
+
+//     // Lấy tất cả đánh giá cho sản phẩm
+//     final ratingsSnapshot = await FirebaseFirestore.instance
+//         .collection('product')
+//         .doc(productId)
+//         .collection('ratings')
+//         .get();
+
+//     for (var ratingDoc in ratingsSnapshot.docs) {
+//       final userId = ratingDoc.id; // ID của đánh giá (được dùng làm userId)
+//       final ratingData = ratingDoc.data(); // Lấy dữ liệu đánh giá
+
+//       // Cập nhật document đánh giá để thêm userId vào dữ liệu
+//       await FirebaseFirestore.instance
+//           .collection('product')
+//           .doc(productId)
+//           .collection('ratings')
+//           .doc(userId) // Sử dụng ID của document
+//           .set({
+//         'rating': ratingData['rating'], // Lưu lại rating
+//         'userId': userId, // Thêm userId vào document
+//       }, SetOptions(merge: true)); // Sử dụng merge để không ghi đè dữ liệu hiện tại
+//     }
+//   }
+
+//   _fetchRatings(); // Làm mới đánh giá trung bình sau khi cập nhật
+// }
+
 
   @override
   Widget build(BuildContext context) {
@@ -312,6 +349,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
                 child: ElevatedButton(
                   onPressed: () {
+                    // _addUserIdToAllRatings();
                     // Handle order action
                     Navigator.of(context).push(
                       MaterialPageRoute(
