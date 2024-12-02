@@ -212,7 +212,7 @@ class _ProductCardState extends State<ProductCard> {
                       topRight: Radius.circular(20)),
                   child: Image(
                     width: 200,
-                    height: 110,
+                    height: 100,
                     fit: BoxFit.cover,
                     image: NetworkImage(
                       widget.snap['imageUrl'].toString(),
@@ -231,10 +231,12 @@ class _ProductCardState extends State<ProductCard> {
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w500),
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Wrap(
+                        spacing: 1.0, // Khoảng cách giữa các phần tử
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: List.generate(5, (index) {
                               return Icon(
                                 Icons.star,
@@ -245,21 +247,20 @@ class _ProductCardState extends State<ProductCard> {
                               );
                             }),
                           ),
-                          SizedBox(
-                            width: 5,
-                          ),
                           Text(
                             _averageRating.toStringAsFixed(1),
                             style: const TextStyle(
                                 fontSize: 10, color: Colors.grey),
                           ),
                           Text(
-                            ' (' + _totalRatings.toString() + ' đánh giá)',
+                            ' (${_totalRatings.toString()} đánh giá)',
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                                 fontSize: 10, color: Colors.grey),
                           ),
                         ],
                       ),
+
                       (widget.snap['isSale'])
                           ? Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
